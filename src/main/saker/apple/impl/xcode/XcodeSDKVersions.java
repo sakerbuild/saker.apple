@@ -103,24 +103,24 @@ public class XcodeSDKVersions implements Externalizable {
 					sdkinfo = new ApplePlatformSDKInformation(line.substring(parenstart + 1, line.length() - 1));
 					continue;
 				}
-				if (line.startsWith("SDKVersion: ")) {
-					sdkinfo.setSDKVersion(line.substring(12));
-				} else if (line.startsWith("Path: ")) {
-					sdkinfo.setPath(SakerPath.valueOf(line.substring(6)));
-				} else if (line.startsWith("PlatformVersion: ")) {
-					sdkinfo.setPlatformVersion(line.substring(17));
-				} else if (line.startsWith("PlatformPath: ")) {
-					sdkinfo.setPlatformPath(SakerPath.valueOf(line.substring(14)));
-				} else if (line.startsWith("ProductBuildVersion: ")) {
-					sdkinfo.setProductBuildVersion(line.substring(21));
-				} else if (line.startsWith("ProductCopyright: ")) {
-					sdkinfo.setProductCopyright(line.substring(18));
-				} else if (line.startsWith("ProductName: ")) {
-					sdkinfo.setProductName(line.substring(13));
-				} else if (line.startsWith("ProductVersion: ")) {
-					sdkinfo.setProductVersion(line.substring(16));
-				} else if (line.startsWith("ProductUserVisibleVersion: ")) {
-					sdkinfo.setProductUserVisibleVersion(line.substring(27));
+				if (line.startsWith("SDKVersion:")) {
+					sdkinfo.setSDKVersion(line.substring(11).trim());
+				} else if (line.startsWith("Path:")) {
+					sdkinfo.setPath(SakerPath.valueOf(line.substring(5).trim()));
+				} else if (line.startsWith("PlatformVersion:")) {
+					sdkinfo.setPlatformVersion(line.substring(16).trim());
+				} else if (line.startsWith("PlatformPath:")) {
+					sdkinfo.setPlatformPath(SakerPath.valueOf(line.substring(13).trim()));
+				} else if (line.startsWith("ProductBuildVersion:")) {
+					sdkinfo.setProductBuildVersion(line.substring(20).trim());
+				} else if (line.startsWith("ProductCopyright:")) {
+					sdkinfo.setProductCopyright(line.substring(17).trim());
+				} else if (line.startsWith("ProductName:")) {
+					sdkinfo.setProductName(line.substring(12).trim());
+				} else if (line.startsWith("ProductVersion:")) {
+					sdkinfo.setProductVersion(line.substring(15).trim());
+				} else if (line.startsWith("ProductUserVisibleVersion:")) {
+					sdkinfo.setProductUserVisibleVersion(line.substring(26).trim());
 				}
 			}
 		}

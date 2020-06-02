@@ -3,6 +3,7 @@ package saker.apple.api;
 public class SakerAppleUtils {
 
 	public static final String SDK_NAME_XCODE = "Xcode";
+	public static final String SDK_NAME_DEVELOPER_MAC_OS = "DevMacOs";
 
 	/**
 	 * E.g.
@@ -62,6 +63,19 @@ public class SakerAppleUtils {
 	 * E.g. <code>0821</code>
 	 */
 	public static final String SDK_XCODE_PROPERTY_VERSION_DTXCODE = "version.dtxcode";
+
+	/**
+	 * E.g. <code>Mac OS X</code>
+	 */
+	public static final String SDK_DEVELOPER_MAC_OS_PROPERTY_PRODUCT_NAME = "product.name";
+	/**
+	 * E.g. <code>10.11.6</code>
+	 */
+	public static final String SDK_DEVELOPER_MAC_OS_PROPERTY_PRODUCT_VERSION = "product.version";
+	/**
+	 * E.g. <code>15G22010</code>
+	 */
+	public static final String SDK_DEVELOPER_MAC_OS_PROPERTY_BUILD_VERSION = "build.version";
 
 	private SakerAppleUtils() {
 		throw new UnsupportedOperationException();

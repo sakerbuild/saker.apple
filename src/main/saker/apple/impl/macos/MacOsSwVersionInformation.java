@@ -17,7 +17,7 @@ import saker.process.api.CollectingProcessIOConsumer;
 import saker.process.api.SakerProcess;
 import saker.process.api.SakerProcessBuilder;
 
-public class MacOsSwVersInformation implements Externalizable {
+public class MacOsSwVersionInformation implements Externalizable {
 	private static final long serialVersionUID = 1L;
 
 	private String productName;
@@ -27,10 +27,15 @@ public class MacOsSwVersInformation implements Externalizable {
 	/**
 	 * For {@link Externalizable}.
 	 */
-	public MacOsSwVersInformation() {
+	public MacOsSwVersionInformation() {
 	}
 
-	public static MacOsSwVersInformation fromSwVersProcess() throws IOException {
+	public static MacOsSwVersionInformation fromSwVersProcess() throws IOException {
+		//example output:
+//		ProductName:	Mac OS X
+//		ProductVersion:	10.11.6
+//		BuildVersion:	15G22010 
+		
 		SakerProcessBuilder pb = SakerProcessBuilder.create();
 		List<String> command = ImmutableUtils.asUnmodifiableArrayList("sw_vers");
 		pb.setCommand(command);
@@ -55,19 +60,19 @@ public class MacOsSwVersInformation implements Externalizable {
 			}
 			throw e;
 		}
-		MacOsSwVersInformation result = new MacOsSwVersInformation();
+		MacOsSwVersionInformation result = new MacOsSwVersionInformation();
 		try (UnsyncByteArrayInputStream bais = new UnsyncByteArrayInputStream(outconsumer.getByteArrayRegion());
 				BufferedReader reader = new BufferedReader(new InputStreamReader(bais, StandardCharsets.UTF_8))) {
 			for (String line; (line = reader.readLine()) != null;) {
 				if (line.isEmpty()) {
 					continue;
 				}
-				if (line.startsWith("ProductName: ")) {
+				if (line.startsWith("ProductName:")) {
+					result.productName = line.substring(12).trim();
+				} else if (line.startsWith("ProductVersion:")) {
+					result.productName = line.substring(15).trim();
+				} else if (line.startsWith("BuildVersion:")) {
 					result.productName = line.substring(13).trim();
-				} else if (line.startsWith("ProductVersion: ")) {
-					result.productName = line.substring(16).trim();
-				} else if (line.startsWith("BuildVersion: ")) {
-					result.productName = line.substring(14).trim();
 				}
 			}
 		}
@@ -116,7 +121,7 @@ public class MacOsSwVersInformation implements Externalizable {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		MacOsSwVersInformation other = (MacOsSwVersInformation) obj;
+		MacOsSwVersionInformation other = (MacOsSwVersionInformation) obj;
 		if (buildVersion == null) {
 			if (other.buildVersion != null)
 				return false;

@@ -9,21 +9,21 @@ import saker.build.runtime.environment.EnvironmentProperty;
 import saker.build.runtime.environment.SakerEnvironment;
 import saker.build.thirdparty.saker.util.ObjectUtils;
 
-public class MacOsSwVersInformationEnvironmentProperty
-		implements EnvironmentProperty<MacOsSwVersInformation>, Externalizable {
+public class MacOsSwVersionInformationEnvironmentProperty
+		implements EnvironmentProperty<MacOsSwVersionInformation>, Externalizable {
 	private static final long serialVersionUID = 1L;
 
-	public static final MacOsSwVersInformationEnvironmentProperty INSTANCE = new MacOsSwVersInformationEnvironmentProperty();
+	public static final MacOsSwVersionInformationEnvironmentProperty INSTANCE = new MacOsSwVersionInformationEnvironmentProperty();
 
 	/**
 	 * For {@link Externalizable}.
 	 */
-	public MacOsSwVersInformationEnvironmentProperty() {
+	public MacOsSwVersionInformationEnvironmentProperty() {
 	}
 
 	@Override
-	public MacOsSwVersInformation getCurrentValue(SakerEnvironment environment) throws Exception {
-		return MacOsSwVersInformation.fromSwVersProcess();
+	public MacOsSwVersionInformation getCurrentValue(SakerEnvironment environment) throws Exception {
+		return MacOsSwVersionInformation.fromSwVersProcess();
 	}
 
 	@Override
