@@ -3,6 +3,8 @@ global(DEPENDENCIES_saker.apple) = [
 	saker.standard, 
 	saker.sdk.support,
 	saker.process-api,
+	saker.compiler.utils,
+	saker.clang,
 ]
 
 static(VERSION_saker.build) = nest.dependency.resolve(

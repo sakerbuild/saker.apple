@@ -1,3 +1,4 @@
+saker.apple.clang.preset=saker.apple.main.clang.AppleClangOptionsPresetTaskFactory
 saker.apple.sdk.dev_macos=saker.apple.main.sdk.DevMacOsSDKTaskFactory
 saker.apple.sdk.platform=saker.apple.main.sdk.PlatformSDKTaskFactory
 saker.apple.sdk.xcode=saker.apple.main.sdk.XcodeSDKTaskFactory

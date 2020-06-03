@@ -3,7 +3,15 @@ package saker.apple.api;
 public class SakerAppleUtils {
 
 	public static final String SDK_NAME_XCODE = "Xcode";
-	public static final String SDK_NAME_DEVELOPER_MAC_OS = "DevMacOs";
+	public static final String SDK_NAME_DEVELOPER_MAC_OS = "DevMacOS";
+
+	public static final String SDK_NAME_PLATFORM_IPHONEOS = "iPhoneOS";
+	public static final String SDK_NAME_PLATFORM_IPHONESIMULATOR = "iPhoneSimulator";
+	public static final String SDK_NAME_PLATFORM_MACOS = "MacOS";
+	public static final String SDK_NAME_PLATFORM_APPLETVOS = "AppleTVOS";
+	public static final String SDK_NAME_PLATFORM_APPLETVSIMULATOR = "AppleTVSimulator";
+	public static final String SDK_NAME_PLATFORM_WATCHOS = "WatchOS";
+	public static final String SDK_NAME_PLATFORM_WATCHSIMULATOR = "WatchSimulator";
 
 	/**
 	 * E.g.

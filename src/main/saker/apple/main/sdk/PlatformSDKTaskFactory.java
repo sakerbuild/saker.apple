@@ -23,7 +23,9 @@ public class PlatformSDKTaskFactory extends FrontendTaskFactory<SDKDescription> 
 	public static final String TASK_NAME = "saker.apple.sdk.platform";
 
 	public static final Set<String> KNOWN_PLATFORMS = ImmutableUtils.makeImmutableNavigableSet(new String[] {
-			"iphoneos", "iphonesimulator", "macosx", "appletvos", "appletvsimulator", "watchos", "watchsimulator", });
+			"iphoneos", "iphonesimulator", "macosx", "appletvos", "appletvsimulator", "watchos", "watchsimulator",
+			//macos is also recognized by us, but converted to macosx internally
+			"macos", });
 
 	@Override
 	public ParameterizableTask<? extends SDKDescription> createTask(ExecutionContext executioncontext) {
@@ -42,6 +44,9 @@ public class PlatformSDKTaskFactory extends FrontendTaskFactory<SDKDescription> 
 				}
 
 				String platform = platformOption.toLowerCase(Locale.ENGLISH);
+				if ("macos".equals(platform)) {
+					platform = "macosx";
+				}
 				if (!KNOWN_PLATFORMS.contains(platform)) {
 					SakerLog.warning().taskScriptPosition(taskcontext).println("Unrecognized platform name: " + platform
 							+ " expected one of: " + StringUtils.toStringJoin(", ", KNOWN_PLATFORMS));
