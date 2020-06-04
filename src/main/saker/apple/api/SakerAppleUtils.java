@@ -13,6 +13,8 @@ public class SakerAppleUtils {
 	public static final String SDK_NAME_PLATFORM_WATCHOS = "WatchOS";
 	public static final String SDK_NAME_PLATFORM_WATCHSIMULATOR = "WatchSimulator";
 
+	public static final String SDK_NAME_STRIP = "Strip";
+
 	/**
 	 * E.g.
 	 * <code>/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk</code>
@@ -84,6 +86,14 @@ public class SakerAppleUtils {
 	 * E.g. <code>15G22010</code>
 	 */
 	public static final String SDK_DEVELOPER_MAC_OS_PROPERTY_BUILD_VERSION = "build.version";
+
+	public static final String SDK_XCODE_EXECUTABLE_PATH_EXECUTABLE = "exe";
+
+	public static final String XCODE_EXECUTABLE_NAME_CLANG = "clang";
+	public static final String XCODE_EXECUTABLE_NAME_STRIP = "strip";
+	public static final String XCODE_EXECUTABLE_NAME_CLANGXX = "clang++";
+	public static final String XCODE_EXECUTABLE_NAME_LIPO = "lipo";
+	public static final String XCODE_EXECUTABLE_NAME_DSYMUTIL = "dsymutil";
 
 	private SakerAppleUtils() {
 		throw new UnsupportedOperationException();

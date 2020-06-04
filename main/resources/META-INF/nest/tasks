@@ -2,4 +2,5 @@ saker.apple.clang.preset=saker.apple.main.clang.AppleClangOptionsPresetTaskFacto
 saker.apple.sdk.dev_macos=saker.apple.main.sdk.DevMacOsSDKTaskFactory
 saker.apple.sdk.platform=saker.apple.main.sdk.PlatformSDKTaskFactory
 saker.apple.sdk.xcode=saker.apple.main.sdk.XcodeSDKTaskFactory
+saker.apple.strip=saker.apple.main.strip.StripTaskFactory
 saker.plist.convert=saker.apple.main.plist.ConvertPlistTaskFactory

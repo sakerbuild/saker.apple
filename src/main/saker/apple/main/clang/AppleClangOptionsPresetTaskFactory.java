@@ -5,11 +5,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.NavigableMap;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 
 import saker.apple.api.SakerAppleUtils;
 import saker.apple.impl.sdk.VersionsApplePlatformSDKDescription;
+import saker.apple.impl.sdk.VersionsXcodeSDKDescription;
 import saker.apple.main.sdk.PlatformSDKTaskFactory;
 import saker.build.runtime.execution.ExecutionContext;
 import saker.build.runtime.execution.SakerLog;
@@ -48,7 +50,7 @@ public class AppleClangOptionsPresetTaskFactory extends FrontendTaskFactory<Obje
 			public String platformVersionMinOption;
 
 			@SakerInput(value = "Architecture")
-			public String architectureOption;
+			public Optional<String> architectureOption;
 
 			@SakerInput(value = "Release")
 			public Boolean releaseOption = Boolean.FALSE;
@@ -89,8 +91,18 @@ public class AppleClangOptionsPresetTaskFactory extends FrontendTaskFactory<Obje
 					platform = "macosx";
 				}
 
-				String architecture = architectureOption == null ? null
-						: architectureOption.toLowerCase(Locale.ENGLISH);
+				sdkmap.putIfAbsent("Clang", VersionsXcodeSDKDescription.create(null).getClangSDK());
+
+				final String architecture;
+				if (architectureOption == null) {
+					architecture = getDefaultArchitecture(platform);
+				} else {
+					String arch = architectureOption.orElse(null);
+					if (arch != null) {
+						arch = arch.toLowerCase(Locale.ENGLISH);
+					}
+					architecture = arch;
+				}
 
 				if (platform != null) {
 					if (!PlatformSDKTaskFactory.KNOWN_PLATFORMS.contains(platform)) {
@@ -313,6 +325,33 @@ public class AppleClangOptionsPresetTaskFactory extends FrontendTaskFactory<Obje
 			basepresetmap.put("Language", languages);
 		}
 		return basepresetmap;
+	}
+
+	protected static String getDefaultArchitecture(String platform) {
+		if (platform == null) {
+			return null;
+		}
+		switch (platform) {
+			case "iphoneos": {
+				return "arm64";
+			}
+			case "appletvos": {
+				return "arm64";
+			}
+			case "watchos": {
+				return "armv7k";
+			}
+			case "macos":
+			case "macosx":
+			case "iphonesimulator":
+			case "appletvsimulator":
+			case "watchsimulator": {
+				return "x86_64";
+			}
+			default: {
+				return null;
+			}
+		}
 	}
 
 	protected static String getMinVersionClangArgument(String platform, String minversion) {

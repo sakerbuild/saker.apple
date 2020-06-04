@@ -14,7 +14,8 @@ import saker.sdk.support.api.IndeterminateSDKDescription;
 import saker.sdk.support.api.SDKDescription;
 import saker.sdk.support.api.SDKReference;
 
-public class VersionsXcodeSDKDescription implements IndeterminateSDKDescription, Externalizable {
+public class VersionsXcodeSDKDescription
+		implements IndeterminateSDKDescription, FrontendXcodeSDKDescriptionFunctions, Externalizable {
 	private static final long serialVersionUID = 1L;
 
 	private NavigableSet<String> versions;
@@ -29,7 +30,7 @@ public class VersionsXcodeSDKDescription implements IndeterminateSDKDescription,
 		this.versions = ImmutableUtils.makeImmutableNavigableSet(versions);
 	}
 
-	public static SDKDescription create(Set<String> versions) {
+	public static VersionsXcodeSDKDescription create(Set<String> versions) {
 		return new VersionsXcodeSDKDescription(versions);
 	}
 
@@ -41,8 +42,10 @@ public class VersionsXcodeSDKDescription implements IndeterminateSDKDescription,
 	@Override
 	public SDKDescription pinSDKDescription(SDKReference sdkreference) {
 		if (sdkreference instanceof XcodeSDKReference) {
-			return EnvironmentSDKDescription.create(new SpecificXcodeSDKReferenceEnvironmentProperty(
-					((XcodeSDKReference) sdkreference).getVersionInformation()));
+			EnvironmentSDKDescription pinnedsdk = EnvironmentSDKDescription
+					.create(new SpecificXcodeSDKReferenceEnvironmentProperty(
+							((XcodeSDKReference) sdkreference).getVersionInformation()));
+			return new PinnedXcodeSDKDescription(pinnedsdk);
 		}
 		//shouldn't happen, but handle just in case
 		return getBaseSDKDescription();
@@ -88,4 +91,22 @@ public class VersionsXcodeSDKDescription implements IndeterminateSDKDescription,
 		return getClass().getSimpleName() + "[" + versions + "]";
 	}
 
+	/**
+	 * This class exists so the <code>get*SDK()</code> functions can be called by external agents via reflection.
+	 */
+	private static final class PinnedXcodeSDKDescription extends DelegateSDKDescription
+			implements FrontendXcodeSDKDescriptionFunctions {
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * For {@link Externalizable}.
+		 */
+		public PinnedXcodeSDKDescription() {
+		}
+
+		public PinnedXcodeSDKDescription(SDKDescription description) {
+			super(description);
+		}
+
+	}
 }
