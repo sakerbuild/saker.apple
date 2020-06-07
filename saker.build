@@ -21,23 +21,38 @@ compile_native(
 	out link,
 ) {
 	$preset = [
-		saker.apple.clang.preset(
-			macosx, 
-			PlatformVersionMin: "10.7",
-			Release: true,
-			Libraries: [
-				c++,
-			],
-			AddRPath: false,
-		),
 		{
 			SimpleCompilerParameters: [
-				"-fno-rtti",
-				"-fno-exceptions",
+				-fno-rtti,
+				-fno-exceptions,
+				-dead_strip,
+				-mmacosx-version-min=10.7,
+				-arch,
+				x86_64,
+				-fobjc-arc,
+				-fobjc-link-runtime,
+				-stdlib=libc++,
+				-Os,
+				-fvisibility=hidden,
+				-fvisibility-inlines-hidden,
+				-fno-commin,
+				-fstrict_aliasing,
+				-std=c++11,
 			],
 			SimpleLinkerParameters: [
 				-shared,
-			]
+				-lc++,
+				-mmacosx-version-min=10.7,
+				-arch,
+				x86_64,
+				-fobjc-arc,
+				-fobjc-link-runtime,
+				-stdlib=libc++,
+			],
+			MacroDefinitions: {
+				OBJC_OLD_DISPATCH_PROTOTYPES: "0",
+				NS_BLOCK_ASSERTIONS: "1",
+			}	
 		}
 	]
 	$clangcompile = saker.clang.compile(
