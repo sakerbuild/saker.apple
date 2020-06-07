@@ -35,8 +35,8 @@ compile_native(
 				-Os,
 				-fvisibility=hidden,
 				-fvisibility-inlines-hidden,
-				-fno-commin,
-				-fstrict_aliasing,
+				-fno-common,
+				-fstrict-aliasing,
 				-std=c++11,
 			],
 			SimpleLinkerParameters: [
