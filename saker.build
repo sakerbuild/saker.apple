@@ -101,9 +101,18 @@ compile(
 		Identifier: "saker.apple",
 	)
 }
+###
+this target can be called on non-macOS builds
+it assumes that the native library is present at build/libappleplatform.x86_64.dylib
+###
+export_local(
+	out export,
+) {
+	$export = export(nativelibpath: build/libappleplatform.x86_64.dylib)
+}
 export(
 	in compile = include(compile),
-	in compile_native = compile_native(javac: $compile[javac])
+	in nativelibpath = compile_native(javac: $compile[javac])[link][OutputPath]
 	out compile,
 	out mainjar,
 	out apijar,
@@ -174,7 +183,7 @@ export(
 				Files: LICENSE,
 				TargetDirectory: META-INF,
 			},
-			$compile_native[link][OutputPath],
+			$nativelibpath,
 		],
 		Manifest: {
 			MainAttributes: {
@@ -205,7 +214,11 @@ export(
 		},
 	)
 }
-install() {
-	$export = include(export)
+install_local() {
+	install(export: export_local()[export])
+}
+install(
+	in export = export()
+) {
 	nest.local.install($export[bundlepaths])
 }
