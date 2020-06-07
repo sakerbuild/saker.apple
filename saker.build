@@ -16,6 +16,54 @@ static(VERSION_saker.nest) = nest.dependency.resolve(
 	Filters: nest.dependency.filter.kind([]),
 )[Bundles][0][BundleIdentifier][VersionNumber]
 
+compile_native(
+	in javac = compile()[javac],
+	out link,
+) {
+	$preset = [
+		saker.apple.clang.preset(
+			macosx, 
+			PlatformVersionMin: "10.7",
+			Release: true,
+			Libraries: [
+				c++,
+			],
+			AddRPath: false,
+		),
+		{
+			SimpleCompilerParameters: [
+				"-fno-rtti",
+				"-fno-exceptions",
+			],
+			SimpleLinkerParameters: [
+				-shared,
+			]
+		}
+	]
+	$clangcompile = saker.clang.compile(
+		{
+			Files: [
+				src/native/**/*.mm,
+				src/native/**/*.cpp,
+			],
+			IncludeDirectories: [
+				sdk.path(Java, Identifier: include.darwin),
+				sdk.path(Java, Identifier: include),
+				$javac[HeaderDirectory],
+			],
+		},
+		CompilerOptions: $preset,
+		Identifier: nativelib,
+		SDKs: {
+			Java: saker.java.sdk()
+		}
+	)
+	$link = saker.clang.link(
+		$clangcompile,
+		LinkerOptions: $preset,
+		BinaryName: libappleplatform.x86_64.dylib,
+	)
+}
 compile(
 	out javac,
 ) {
@@ -34,11 +82,13 @@ compile(
 			]),
 			saker.java.classpath.bundle($resolveddependencies),
 		],
-		Identifier: "saker.apple",	
+		GenerateNativeHeaders: true,	
+		Identifier: "saker.apple",
 	)
 }
 export(
 	in compile = include(compile),
+	in compile_native = compile_native(javac: $compile[javac])
 	out compile,
 	out mainjar,
 	out apijar,
@@ -69,6 +119,7 @@ export(
 				Nest-Bundle-Format-Version: 1,
 				Nest-Bundle-Identifier: "saker.apple-v{ global(VERSION_saker.apple) }",
 				Nest-Bundle-Source: "saker.apple-sources-v{ global(VERSION_saker.apple) }",
+				Nest-ClassPath-Supported-Repository-Versions: "[0.8.6)",
 			},
 		},
 	)
@@ -89,6 +140,7 @@ export(
 				Nest-Bundle-Format-Version: 1,
 				Nest-Bundle-Identifier: "saker.apple-api-v{ global(VERSION_saker.apple) }",
 				Nest-Bundle-Source: "saker.apple-sources-v{ global(VERSION_saker.apple) }",
+				Nest-ClassPath-Supported-Repository-Versions: "[0.8.6)",
 			},
 		},
 	)
@@ -107,12 +159,14 @@ export(
 				Files: LICENSE,
 				TargetDirectory: META-INF,
 			},
+			$compile_native[link][OutputPath],
 		],
 		Manifest: {
 			MainAttributes: {
 				Nest-Bundle-Format-Version: 1,
 				Nest-Bundle-Identifier: "saker.apple-impl-v{ global(VERSION_saker.apple) }",
 				Nest-Bundle-Source: "saker.apple-sources-v{ global(VERSION_saker.apple) }",
+				Nest-ClassPath-Supported-Repository-Versions: "[0.8.6)",
 			},
 		},
 	)

@@ -34,7 +34,7 @@ import saker.sdk.support.api.SDKSupportUtils;
 public class AppleClangOptionsPresetTaskFactory extends FrontendTaskFactory<Object> {
 	private static final long serialVersionUID = 1L;
 
-	public static final String TASK_NAMe = "saker.apple.clang.preset";
+	public static final String TASK_NAME = "saker.apple.clang.preset";
 
 	//TODO check these values, especially arm64_32
 	public static final Set<String> KNOWN_ARCHITECTURES = ImmutableUtils.makeImmutableNavigableSet(
@@ -63,6 +63,9 @@ public class AppleClangOptionsPresetTaskFactory extends FrontendTaskFactory<Obje
 
 			@SakerInput(value = { "Frameworks" })
 			public Collection<String> frameworksOption;
+
+			@SakerInput(value = "AddRPath")
+			public Boolean addRPathOption = Boolean.TRUE;
 
 			@SakerInput(value = { "Identifier" })
 			public CompilationIdentifierTaskOption identifierOption;
@@ -125,10 +128,12 @@ public class AppleClangOptionsPresetTaskFactory extends FrontendTaskFactory<Obje
 							sysroot = SDKPathReference.create(SakerAppleUtils.SDK_NAME_PLATFORM_IPHONEOS,
 									SakerAppleUtils.SDK_APPLEPLATFORM_PATH_PATH);
 
-							linkerparams.add("-Xlinker");
-							linkerparams.add("-rpath");
-							linkerparams.add("-Xlinker");
-							linkerparams.add("@executable_path/Frameworks");
+							if (Boolean.TRUE.equals(addRPathOption)) {
+								linkerparams.add("-Xlinker");
+								linkerparams.add("-rpath");
+								linkerparams.add("-Xlinker");
+								linkerparams.add("@executable_path/Frameworks");
+							}
 							linkerparams.add("-dead_strip");
 							break;
 						}
@@ -138,10 +143,12 @@ public class AppleClangOptionsPresetTaskFactory extends FrontendTaskFactory<Obje
 							sysroot = SDKPathReference.create(SakerAppleUtils.SDK_NAME_PLATFORM_IPHONESIMULATOR,
 									SakerAppleUtils.SDK_APPLEPLATFORM_PATH_PATH);
 
-							linkerparams.add("-Xlinker");
-							linkerparams.add("-rpath");
-							linkerparams.add("-Xlinker");
-							linkerparams.add("@executable_path/Frameworks");
+							if (Boolean.TRUE.equals(addRPathOption)) {
+								linkerparams.add("-Xlinker");
+								linkerparams.add("-rpath");
+								linkerparams.add("-Xlinker");
+								linkerparams.add("@executable_path/Frameworks");
+							}
 							linkerparams.add("-dead_strip");
 							break;
 						}
@@ -154,10 +161,12 @@ public class AppleClangOptionsPresetTaskFactory extends FrontendTaskFactory<Obje
 
 							//so the frameworks are searched under the Frameworks directory of the .app bundle
 							//https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html
-							linkerparams.add("-Xlinker");
-							linkerparams.add("-rpath");
-							linkerparams.add("-Xlinker");
-							linkerparams.add("@executable_path/../Frameworks");
+							if (Boolean.TRUE.equals(addRPathOption)) {
+								linkerparams.add("-Xlinker");
+								linkerparams.add("-rpath");
+								linkerparams.add("-Xlinker");
+								linkerparams.add("@executable_path/../Frameworks");
+							}
 							break;
 						}
 						case "appletvos": {
@@ -166,10 +175,12 @@ public class AppleClangOptionsPresetTaskFactory extends FrontendTaskFactory<Obje
 							sysroot = SDKPathReference.create(SakerAppleUtils.SDK_NAME_PLATFORM_APPLETVOS,
 									SakerAppleUtils.SDK_APPLEPLATFORM_PATH_PATH);
 
-							linkerparams.add("-Xlinker");
-							linkerparams.add("-rpath");
-							linkerparams.add("-Xlinker");
-							linkerparams.add("@executable_path/Frameworks");
+							if (Boolean.TRUE.equals(addRPathOption)) {
+								linkerparams.add("-Xlinker");
+								linkerparams.add("-rpath");
+								linkerparams.add("-Xlinker");
+								linkerparams.add("@executable_path/Frameworks");
+							}
 							linkerparams.add("-dead_strip");
 							break;
 						}
@@ -179,10 +190,12 @@ public class AppleClangOptionsPresetTaskFactory extends FrontendTaskFactory<Obje
 							sysroot = SDKPathReference.create(SakerAppleUtils.SDK_NAME_PLATFORM_APPLETVSIMULATOR,
 									SakerAppleUtils.SDK_APPLEPLATFORM_PATH_PATH);
 
-							linkerparams.add("-Xlinker");
-							linkerparams.add("-rpath");
-							linkerparams.add("-Xlinker");
-							linkerparams.add("@executable_path/Frameworks");
+							if (Boolean.TRUE.equals(addRPathOption)) {
+								linkerparams.add("-Xlinker");
+								linkerparams.add("-rpath");
+								linkerparams.add("-Xlinker");
+								linkerparams.add("@executable_path/Frameworks");
+							}
 							linkerparams.add("-dead_strip");
 							break;
 						}
@@ -192,10 +205,12 @@ public class AppleClangOptionsPresetTaskFactory extends FrontendTaskFactory<Obje
 							sysroot = SDKPathReference.create(SakerAppleUtils.SDK_NAME_PLATFORM_WATCHOS,
 									SakerAppleUtils.SDK_APPLEPLATFORM_PATH_PATH);
 
-							linkerparams.add("-Xlinker");
-							linkerparams.add("-rpath");
-							linkerparams.add("-Xlinker");
-							linkerparams.add("@executable_path/Frameworks");
+							if (Boolean.TRUE.equals(addRPathOption)) {
+								linkerparams.add("-Xlinker");
+								linkerparams.add("-rpath");
+								linkerparams.add("-Xlinker");
+								linkerparams.add("@executable_path/Frameworks");
+							}
 							linkerparams.add("-dead_strip");
 							break;
 						}
@@ -205,10 +220,12 @@ public class AppleClangOptionsPresetTaskFactory extends FrontendTaskFactory<Obje
 							sysroot = SDKPathReference.create(SakerAppleUtils.SDK_NAME_PLATFORM_WATCHSIMULATOR,
 									SakerAppleUtils.SDK_APPLEPLATFORM_PATH_PATH);
 
-							linkerparams.add("-Xlinker");
-							linkerparams.add("-rpath");
-							linkerparams.add("-Xlinker");
-							linkerparams.add("@executable_path/Frameworks");
+							if (Boolean.TRUE.equals(addRPathOption)) {
+								linkerparams.add("-Xlinker");
+								linkerparams.add("-rpath");
+								linkerparams.add("-Xlinker");
+								linkerparams.add("@executable_path/Frameworks");
+							}
 							linkerparams.add("-dead_strip");
 							break;
 						}

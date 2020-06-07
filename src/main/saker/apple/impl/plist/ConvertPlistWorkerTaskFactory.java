@@ -2,14 +2,15 @@ package saker.apple.impl.plist;
 
 import java.io.Externalizable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.nio.file.Path;
 import java.util.UUID;
 
 import saker.apple.api.plist.ConvertPlistWorkerTaskOutput;
+import saker.apple.impl.plist.lib.Plist;
 import saker.apple.main.plist.ConvertPlistTaskFactory;
-import saker.build.file.DirectoryVisitPredicate;
+import saker.build.file.ByteArraySakerFile;
 import saker.build.file.SakerDirectory;
 import saker.build.file.SakerFile;
 import saker.build.file.content.ContentDescriptor;
@@ -21,16 +22,12 @@ import saker.build.runtime.execution.ExecutionContext;
 import saker.build.task.Task;
 import saker.build.task.TaskContext;
 import saker.build.task.TaskExecutionUtilities;
-import saker.build.task.TaskExecutionUtilities.MirroredFileContents;
 import saker.build.task.TaskFactory;
 import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
-import saker.build.thirdparty.saker.util.ImmutableUtils;
 import saker.build.thirdparty.saker.util.ObjectUtils;
 import saker.build.thirdparty.saker.util.io.SerialUtils;
+import saker.build.thirdparty.saker.util.io.function.IOSupplier;
 import saker.build.trace.BuildTrace;
-import saker.process.api.CollectingProcessIOConsumer;
-import saker.process.api.SakerProcess;
-import saker.process.api.SakerProcessBuilder;
 import saker.std.api.file.location.ExecutionFileLocation;
 import saker.std.api.file.location.FileLocation;
 import saker.std.api.file.location.FileLocationVisitor;
@@ -60,6 +57,20 @@ public class ConvertPlistWorkerTaskFactory
 		return 1;
 	}
 
+	private int getPlistFormat() {
+		switch (format) {
+			case "binary1": {
+				return Plist.FORMAT_BINARY;
+			}
+			case "xml1": {
+				return Plist.FORMAT_XML;
+			}
+			default: {
+				throw new IllegalArgumentException("Unsupported format: " + format);
+			}
+		}
+	}
+
 	@Override
 	public ConvertPlistWorkerTaskOutput run(TaskContext taskcontext) throws Exception {
 		if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
@@ -75,7 +86,8 @@ public class ConvertPlistWorkerTaskFactory
 				SakerPathFiles.requireBuildDirectory(taskcontext).getDirectoryCreate(ConvertPlistTaskFactory.TASK_NAME),
 				relativeoutputpath.getParent());
 
-		Path[] inpath = { null };
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		IOSupplier<? extends InputStream>[] streamsupplier = new IOSupplier[] { null };
 		input.accept(new FileLocationVisitor() {
 			@Override
 			public void visit(LocalFileLocation loc) {
@@ -85,48 +97,34 @@ public class ConvertPlistWorkerTaskFactory
 				if (cd == null || cd instanceof DirectoryContentDescriptor) {
 					throw ObjectUtils.sneakyThrow(new NoSuchFieldError("Not a file: " + path));
 				}
-				inpath[0] = LocalFileProvider.toRealPath(path);
+				streamsupplier[0] = () -> LocalFileProvider.getInstance().openInputStream(path);
 			}
 
 			@Override
 			public void visit(ExecutionFileLocation loc) {
 				SakerPath path = loc.getPath();
-				try {
-					MirroredFileContents fc = taskutils.mirrorFileAtPathContents(path);
-					taskcontext.reportInputFileDependency(null, path, fc.getContents());
-					inpath[0] = fc.getPath();
-				} catch (NullPointerException | IOException e) {
-					throw ObjectUtils.sneakyThrow(e);
+				SakerFile f = taskutils.resolveFileAtPath(path);
+				if (f == null) {
+					throw ObjectUtils.sneakyThrow(new NoSuchFieldError("Not a file: " + path));
 				}
+				taskcontext.reportInputFileDependency(null, path, f.getContentDescriptor());
+				streamsupplier[0] = f::openInputStream;
 			}
 		});
 		String outputfilename = relativeoutputpath.getFileName();
-		Path outputpath = taskcontext.mirror(outputdir, DirectoryVisitPredicate.synchronizeNothing())
-				.resolve(outputfilename);
 
-		SakerProcessBuilder pb = SakerProcessBuilder.create();
-		pb.setCommand(ImmutableUtils.asUnmodifiableArrayList("plutil", "-convert", format, inpath[0].toString(), "-o",
-				outputpath.toString()));
-		pb.setStandardErrorMerge(true);
-		CollectingProcessIOConsumer outconsumer = new CollectingProcessIOConsumer();
-		pb.setStandardOutputConsumer(outconsumer);
-		try (SakerProcess proc = pb.start()) {
-			proc.processIO();
-			int ec = proc.waitFor();
-			if (ec != 0) {
-				throw new IOException("Failed to run plutil. Exit code: " + ec);
+		ByteArraySakerFile outfile;
+		try (InputStream is = streamsupplier[0].get()) {
+			try (Plist plist = Plist.readFrom(is)) {
+				byte[] serialized = plist.serialize(getPlistFormat());
+				outfile = new ByteArraySakerFile(outputfilename, serialized);
 			}
-		} finally {
-			taskcontext.getStandardOut().write(outconsumer.getByteArrayRegion());
 		}
-
-		taskutils.addSynchronizeInvalidatedProviderPathFileToDirectory(outputdir,
-				LocalFileProvider.getInstance().getPathKey(outputpath), outputfilename);
-
-		SakerFile outfile = outputdir.get(outputfilename);
-		taskutils.reportOutputFileDependency(null, outfile);
+		outputdir.add(outfile);
+		outfile.synchronize();
 
 		SakerPath outputsakerpath = outfile.getSakerPath();
+		taskcontext.reportOutputFileDependency(null, outputsakerpath, outfile.getContentDescriptor());
 
 		ConvertPlistWorkerTaskOutputImpl result = new ConvertPlistWorkerTaskOutputImpl(outputsakerpath, format);
 		taskcontext.reportSelfTaskOutputChangeDetector(new EqualityTaskOutputChangeDetector(result));
