@@ -42,6 +42,11 @@ public class Plist implements AutoCloseable {
 		return new Plist(createFromBytes(bytes.getArray(), bytes.getOffset(), bytes.getLength()));
 	}
 
+	public Object get(String key) {
+		Objects.requireNonNull(key, "key");
+		return getValue(ptr, key);
+	}
+
 	public void set(String key, String value) {
 		Objects.requireNonNull(key, "key");
 		Objects.requireNonNull(value, "value");
@@ -135,6 +140,8 @@ public class Plist implements AutoCloseable {
 	private static native void setArrayKeyValue(long ptr, String key, Object[] value);
 
 	private static native void setObjectKeyValue(long ptr, String key, Object value);
+
+	private static native Object getValue(long ptr, String key);
 
 	private void use() throws IllegalStateException {
 		AIFU_useCounter.updateAndGet(this, c -> {

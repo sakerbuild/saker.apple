@@ -3,5 +3,6 @@ saker.apple.sdk.dev_macos=saker.apple.main.sdk.DevMacOsSDKTaskFactory
 saker.apple.sdk.platform=saker.apple.main.sdk.PlatformSDKTaskFactory
 saker.apple.sdk.xcode=saker.apple.main.sdk.XcodeSDKTaskFactory
 saker.apple.strip=saker.apple.main.strip.StripTaskFactory
+saker.macos.bundle.create=saker.apple.main.macos.bundle.CreateMacosBundleTaskFactory
 saker.plist.convert=saker.apple.main.plist.ConvertPlistTaskFactory
 saker.plist.insert=saker.apple.main.plist.InsertPlistTaskFactory

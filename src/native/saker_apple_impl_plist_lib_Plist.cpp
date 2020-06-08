@@ -84,7 +84,7 @@ static CFReference<CFStringRef> toCFString(JNIEnv *env, jstring string) {
 	if (string == NULL) {
 		return NULL;
 	}
-	const jchar *raw = env->GetStringChars(string, 0);
+	const jchar* raw = env->GetStringChars(string, 0);
 	jsize len = env->GetStringLength(string);
 	CFReference<CFStringRef> result = CFStringCreateWithCharacters(NULL, reinterpret_cast<const UniChar*>(raw), len);
 	env->ReleaseStringChars(string, raw);
@@ -112,7 +112,7 @@ static CFReference<CFNumberRef> toCFObject(JNIEnv *env, jlong value) {
 }
 
 struct CFConversionContext {
-	JNIEnv *env;
+	JNIEnv* env;
 	jclass strclass = NULL;
 	jclass longclass = NULL;
 	jclass doubleclass = NULL;
@@ -156,7 +156,7 @@ static CFReference<CFTypeRef> toCFObject(JNIEnv *env, jobject o) {
 	return toCFObject(cc, o);
 }
 static CFReference<CFTypeRef> toCFObject(CFConversionContext &cc, jobjectArray value) {
-	JNIEnv *env = cc.env;
+	JNIEnv* env = cc.env;
 	jsize len = env->GetArrayLength(value);
 	CFMutableArrayRef arrayref = CFArrayCreateMutable(NULL, len, &kCFTypeArrayCallBacks);
 	if (arrayref == NULL) {
@@ -175,7 +175,7 @@ static CFReference<CFTypeRef> toCFObject(CFConversionContext &cc, jobjectArray v
 	return arrayref;
 }
 static CFReference<CFTypeRef> toCFObject(CFConversionContext &cc, jobject o) {
-	JNIEnv *env = cc.env;
+	JNIEnv* env = cc.env;
 	if (o == NULL) {
 		javaException(env, "java/lang/NullPointerException", "Null plist element.");
 		return nullptr;
@@ -302,7 +302,7 @@ JNIEXPORT jlong JNICALL Java_saker_apple_impl_plist_lib_Plist_createEmptyPlist(J
 }
 JNIEXPORT jlong JNICALL Java_saker_apple_impl_plist_lib_Plist_createFromBytes(JNIEnv *env, jclass clazz,
 		jbyteArray bytes, jint offset, jint length) {
-	jbyte *nativebytes = env->GetByteArrayElements(bytes, NULL);
+	jbyte* nativebytes = env->GetByteArrayElements(bytes, NULL);
 	if (nativebytes == NULL) {
 		javaException(env, "java/io/IOException", "Failed to retrieve pointer to byte array.");
 		return NULL;
@@ -335,7 +335,7 @@ JNIEXPORT jlong JNICALL Java_saker_apple_impl_plist_lib_Plist_createFromBytes(JN
 
 JNIEXPORT jbyteArray JNICALL Java_saker_apple_impl_plist_lib_Plist_serialize(JNIEnv *env, jclass clazz, jlong ptr,
 		jint format) {
-	PlistImpl &plist = *reinterpret_cast<PlistImpl*>(ptr);
+	PlistImpl& plist = *reinterpret_cast<PlistImpl*>(ptr);
 	CFPropertyListFormat plformat;
 	switch (format) {
 		case Java_const_saker_apple_impl_plist_lib_Plist_FORMAT_SAME_AS_INPUT: {
@@ -427,6 +427,46 @@ JNIEXPORT void JNICALL Java_saker_apple_impl_plist_lib_Plist_setObjectKeyValue(
 	}
 	PlistImpl& plist = *reinterpret_cast<PlistImpl*>(ptr);
 	CFDictionarySetValue((CFMutableDictionaryRef) plist.propertyList.ref(), toCFString(env, key), ref);
+}
+
+static jstring cfStringToJString(JNIEnv *env, CFStringRef str) {
+	auto len = CFStringGetLength(str);
+	auto ptr = CFStringGetCharactersPtr(str);
+	if (ptr != NULL) {
+		auto result = env->NewString(ptr, len);
+		//if result is NULL, OutOfMemoryError is thrown automatically
+		return result;
+	}
+	jchar* buf = new jchar[len];
+	CFStringGetCharacters(str, CFRangeMake(0, len), buf);
+	auto result = env->NewString(buf, len);
+	//if result is NULL, OutOfMemoryError is thrown automatically
+	delete[] buf;
+	return result;
+}
+
+JNIEXPORT jobject JNICALL Java_saker_apple_impl_plist_lib_Plist_getValue(JNIEnv *env, jclass clazz, jlong ptr,
+		jstring key) {
+	PlistImpl& plist = *reinterpret_cast<PlistImpl*>(ptr);
+
+	//no need to release, Get rule
+	auto val = CFDictionaryGetValue((CFDictionaryRef) plist.propertyList.ref(), toCFString(env, key));
+	if (val == NULL) {
+		return NULL;
+	}
+	auto valtypeid = CFGetTypeID(val);
+	if (valtypeid == CFStringGetTypeID()) {
+		CFStringRef strref = (CFStringRef) val;
+		return cfStringToJString(env, strref);
+	}
+//	if (valtypeid == CFBooleanGetTypeID()) {
+//		if (CFBooleanGetValue((CFBooleanRef) val)) {
+//
+//		}
+//	}
+	//TODO implement
+	javaException(env, "java/lang/UnsupportedOperationException", "Failed to return unsupported plist value type.");
+	return NULL;
 }
 
 JNIEXPORT void JNICALL Java_saker_apple_impl_plist_lib_Plist_release(
