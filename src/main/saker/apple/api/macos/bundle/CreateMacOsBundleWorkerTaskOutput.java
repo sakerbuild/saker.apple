@@ -4,7 +4,7 @@ import java.util.NavigableMap;
 
 import saker.build.file.path.SakerPath;
 
-public interface CreateMacosBundleWorkerTaskOutput {
+public interface CreateMacOsBundleWorkerTaskOutput {
 	public SakerPath getAppDirectory();
 
 	//relative bundle paths to absolute execution paths

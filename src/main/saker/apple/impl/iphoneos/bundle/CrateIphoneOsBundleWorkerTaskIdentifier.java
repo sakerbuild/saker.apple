@@ -1,4 +1,4 @@
-package saker.apple.impl.macos.bundle;
+package saker.apple.impl.iphoneos.bundle;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -8,7 +8,7 @@ import java.io.ObjectOutput;
 import saker.build.file.path.SakerPath;
 import saker.build.task.identifier.TaskIdentifier;
 
-public class CrateMacosBundleWorkerTaskIdentifier implements TaskIdentifier, Externalizable {
+public class CrateIphoneOsBundleWorkerTaskIdentifier implements TaskIdentifier, Externalizable {
 	private static final long serialVersionUID = 1L;
 
 	private SakerPath outputPath;
@@ -16,10 +16,10 @@ public class CrateMacosBundleWorkerTaskIdentifier implements TaskIdentifier, Ext
 	/**
 	 * For {@link Externalizable}.
 	 */
-	public CrateMacosBundleWorkerTaskIdentifier() {
+	public CrateIphoneOsBundleWorkerTaskIdentifier() {
 	}
 
-	public CrateMacosBundleWorkerTaskIdentifier(SakerPath outputPath) {
+	public CrateIphoneOsBundleWorkerTaskIdentifier(SakerPath outputPath) {
 		this.outputPath = outputPath;
 	}
 
@@ -53,7 +53,7 @@ public class CrateMacosBundleWorkerTaskIdentifier implements TaskIdentifier, Ext
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		CrateMacosBundleWorkerTaskIdentifier other = (CrateMacosBundleWorkerTaskIdentifier) obj;
+		CrateIphoneOsBundleWorkerTaskIdentifier other = (CrateIphoneOsBundleWorkerTaskIdentifier) obj;
 		if (outputPath == null) {
 			if (other.outputPath != null)
 				return false;

@@ -13,8 +13,8 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.UUID;
 
-import saker.apple.impl.macos.bundle.CrateMacosBundleWorkerTaskIdentifier;
-import saker.apple.impl.macos.bundle.CreateMacosBundleWorkerTaskFactory;
+import saker.apple.impl.macos.bundle.CrateMacOsBundleWorkerTaskIdentifier;
+import saker.apple.impl.macos.bundle.CreateMacOsBundleWorkerTaskFactory;
 import saker.apple.impl.plist.lib.Plist;
 import saker.build.file.SakerFile;
 import saker.build.file.content.ContentDescriptor;
@@ -40,7 +40,7 @@ import saker.std.api.util.SakerStandardUtils;
 import saker.std.main.dir.prepare.RelativeContentsTaskOption;
 import saker.std.main.file.utils.TaskOptionUtils;
 
-public class CreateMacosBundleTaskFactory extends FrontendTaskFactory<Object> {
+public class CreateMacOsBundleTaskFactory extends FrontendTaskFactory<Object> {
 	private static final SakerPath PATH_CONTENTS_PKGINFO = SakerPath.valueOf("Contents/PkgInfo");
 	private static final SakerPath PATH_CONTENTS_INFOPLIST = SakerPath.valueOf("Contents/Info.plist");
 	private static final SakerPath PATH_CONTENTS = SakerPath.valueOf("Contents");
@@ -50,7 +50,7 @@ public class CreateMacosBundleTaskFactory extends FrontendTaskFactory<Object> {
 	private static final SakerPath PATH_CONTENTS_PLUGINS = SakerPath.valueOf("Contents/PlugIns");
 	private static final SakerPath PATH_CONTENTS_SHAREDSUPPORT = SakerPath.valueOf("Contents/SharedSupport");
 
-	private static final Object DEP_TAG_INFOPLIST = PATH_CONTENTS_INFOPLIST;
+	private static final Object DEP_TAG_INFOPLIST = "dep-tag-info-plist";
 
 	private static final long serialVersionUID = 1L;
 
@@ -104,45 +104,8 @@ public class CreateMacosBundleTaskFactory extends FrontendTaskFactory<Object> {
 					if (!inputmappings.containsKey(PATH_CONTENTS_PKGINFO)) {
 						FileLocation plist = inputmappings.get(PATH_CONTENTS_INFOPLIST);
 						if (plist != null) {
-							plist.accept(new FileLocationVisitor() {
-								@Override
-								public void visit(LocalFileLocation loc) {
-									SakerPath path = loc.getLocalPath();
-									ContentDescriptor cd = taskcontext.getTaskUtilities().getReportExecutionDependency(
-											SakerStandardUtils.createLocalFileContentDescriptorExecutionProperty(path,
-													UUID.randomUUID()));
-									if (cd == null || cd instanceof DirectoryContentDescriptor) {
-										throw ObjectUtils.sneakyThrow(
-												new NoSuchFileException("Specified Info.plist is not a file: " + path));
-									}
-									try (InputStream is = LocalFileProvider.getInstance().openInputStream(path)) {
-										inputmappings.put(PATH_CONTENTS_PKGINFO,
-												getPkgInfoFileLocationBasedOnPlist(taskcontext, is));
-									} catch (Exception e) {
-										throw ObjectUtils.sneakyThrow(e);
-									}
-								}
-
-								@Override
-								public void visit(ExecutionFileLocation loc) {
-									SakerPath path = loc.getPath();
-									SakerFile f = taskcontext.getTaskUtilities().resolveFileAtPath(path);
-									if (f == null) {
-										taskcontext.reportInputFileDependency(DEP_TAG_INFOPLIST, path,
-												CommonTaskContentDescriptors.IS_NOT_FILE);
-										throw ObjectUtils.sneakyThrow(
-												new NoSuchFileException("Specified Info.plist is not a file: " + path));
-									}
-									taskcontext.reportInputFileDependency(DEP_TAG_INFOPLIST, path,
-											f.getContentDescriptor());
-									try (InputStream is = f.openInputStream()) {
-										inputmappings.put(PATH_CONTENTS_PKGINFO,
-												getPkgInfoFileLocationBasedOnPlist(taskcontext, is));
-									} catch (Exception e) {
-										throw ObjectUtils.sneakyThrow(e);
-									}
-								}
-							});
+							inputmappings.put(PATH_CONTENTS_PKGINFO,
+									getPkgInfoFileLocationBasedOnInfoPlits(taskcontext, plist));
 						}
 						//else don't auto generate the pkginfo as we don't have an info.plist
 					}
@@ -156,21 +119,62 @@ public class CreateMacosBundleTaskFactory extends FrontendTaskFactory<Object> {
 					outputpath = SakerPath.valueOf(TASK_NAME).resolve("default.app");
 				}
 
-				CrateMacosBundleWorkerTaskIdentifier workertaskid = new CrateMacosBundleWorkerTaskIdentifier(
+				CrateMacOsBundleWorkerTaskIdentifier workertaskid = new CrateMacOsBundleWorkerTaskIdentifier(
 						outputpath);
-				CreateMacosBundleWorkerTaskFactory workertask = new CreateMacosBundleWorkerTaskFactory(inputmappings);
+				CreateMacOsBundleWorkerTaskFactory workertask = new CreateMacOsBundleWorkerTaskFactory(inputmappings);
 				taskcontext.startTask(workertaskid, workertask, null);
 
 				SimpleStructuredObjectTaskResult result = new SimpleStructuredObjectTaskResult(workertaskid);
 				taskcontext.reportSelfTaskOutputChangeDetector(new EqualityTaskOutputChangeDetector(result));
 				return result;
 			}
+
 		};
+	}
+
+	public static FileLocation getPkgInfoFileLocationBasedOnInfoPlits(TaskContext taskcontext, FileLocation plist) {
+		FileLocation[] result = { null };
+		plist.accept(new FileLocationVisitor() {
+			@Override
+			public void visit(LocalFileLocation loc) {
+				SakerPath path = loc.getLocalPath();
+				ContentDescriptor cd = taskcontext.getTaskUtilities().getReportExecutionDependency(
+						SakerStandardUtils.createLocalFileContentDescriptorExecutionProperty(path, UUID.randomUUID()));
+				if (cd == null || cd instanceof DirectoryContentDescriptor) {
+					throw ObjectUtils
+							.sneakyThrow(new NoSuchFileException("Specified Info.plist is not a file: " + path));
+				}
+				try (InputStream is = LocalFileProvider.getInstance().openInputStream(path)) {
+					result[0] = getPkgInfoFileLocationBasedOnPlist(taskcontext, is);
+				} catch (Exception e) {
+					throw ObjectUtils.sneakyThrow(e);
+				}
+			}
+
+			@Override
+			public void visit(ExecutionFileLocation loc) {
+				SakerPath path = loc.getPath();
+				SakerFile f = taskcontext.getTaskUtilities().resolveFileAtPath(path);
+				if (f == null) {
+					taskcontext.reportInputFileDependency(DEP_TAG_INFOPLIST, path,
+							CommonTaskContentDescriptors.IS_NOT_FILE);
+					throw ObjectUtils
+							.sneakyThrow(new NoSuchFileException("Specified Info.plist is not a file: " + path));
+				}
+				taskcontext.reportInputFileDependency(DEP_TAG_INFOPLIST, path, f.getContentDescriptor());
+				try (InputStream is = f.openInputStream()) {
+					result[0] = getPkgInfoFileLocationBasedOnPlist(taskcontext, is);
+				} catch (Exception e) {
+					throw ObjectUtils.sneakyThrow(e);
+				}
+			}
+		});
+		return result[0];
 	}
 
 	protected static FileLocation getPkgInfoFileLocationBasedOnPlist(TaskContext taskcontext, InputStream in)
 			throws IOException {
-		NestBundleClassLoader cl = (NestBundleClassLoader) CreateMacosBundleTaskFactory.class.getClassLoader();
+		NestBundleClassLoader cl = (NestBundleClassLoader) CreateMacOsBundleTaskFactory.class.getClassLoader();
 		Path storagedir = cl.getBundle().getBundleStoragePath().resolve("gen_PkgInfo");
 		String pkginfocontents;
 		try (Plist plist = Plist.readFrom(in)) {

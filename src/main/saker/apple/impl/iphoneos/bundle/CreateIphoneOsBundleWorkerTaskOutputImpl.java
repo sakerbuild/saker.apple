@@ -1,4 +1,4 @@
-package saker.apple.impl.macos.bundle;
+package saker.apple.impl.iphoneos.bundle;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -6,11 +6,11 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.NavigableMap;
 
-import saker.apple.api.macos.bundle.CreateMacosBundleWorkerTaskOutput;
+import saker.apple.api.iphoneos.bundle.CreateIphoneOsBundleWorkerTaskOutput;
 import saker.build.file.path.SakerPath;
 import saker.build.thirdparty.saker.util.io.SerialUtils;
 
-final class CreateMacosBundleWorkerTaskOutputImpl implements CreateMacosBundleWorkerTaskOutput, Externalizable {
+final class CreateIphoneOsBundleWorkerTaskOutputImpl implements CreateIphoneOsBundleWorkerTaskOutput, Externalizable {
 	private static final long serialVersionUID = 1L;
 
 	private SakerPath appDirectory;
@@ -19,10 +19,10 @@ final class CreateMacosBundleWorkerTaskOutputImpl implements CreateMacosBundleWo
 	/**
 	 * For {@link Externalizable}.
 	 */
-	public CreateMacosBundleWorkerTaskOutputImpl() {
+	public CreateIphoneOsBundleWorkerTaskOutputImpl() {
 	}
 
-	public CreateMacosBundleWorkerTaskOutputImpl(SakerPath diroutpath,
+	public CreateIphoneOsBundleWorkerTaskOutputImpl(SakerPath diroutpath,
 			NavigableMap<SakerPath, SakerPath> mappingpaths) {
 		this.appDirectory = diroutpath;
 		this.mappings = mappingpaths;
@@ -66,7 +66,7 @@ final class CreateMacosBundleWorkerTaskOutputImpl implements CreateMacosBundleWo
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		CreateMacosBundleWorkerTaskOutputImpl other = (CreateMacosBundleWorkerTaskOutputImpl) obj;
+		CreateIphoneOsBundleWorkerTaskOutputImpl other = (CreateIphoneOsBundleWorkerTaskOutputImpl) obj;
 		if (appDirectory == null) {
 			if (other.appDirectory != null)
 				return false;

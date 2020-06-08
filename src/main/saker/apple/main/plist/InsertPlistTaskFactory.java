@@ -12,7 +12,6 @@ import java.util.TreeMap;
 import saker.apple.impl.plist.InsertPlistWorkerTaskFactory;
 import saker.apple.impl.plist.InsertPlistWorkerTaskIdentifier;
 import saker.apple.impl.plist.PlistValueOption;
-import saker.build.exception.InvalidPathFormatException;
 import saker.build.file.path.SakerPath;
 import saker.build.runtime.execution.ExecutionContext;
 import saker.build.task.ParameterizableTask;
@@ -72,12 +71,7 @@ public class InsertPlistTaskFactory extends FrontendTaskFactory<Object> {
 
 				SakerPath outputpath;
 				if (outputOption != null) {
-					if (!outputOption.isForwardRelative()) {
-						throw new InvalidPathFormatException("Output" + " must be forward relative: " + outputOption);
-					}
-					if (outputOption.getFileName() == null) {
-						throw new InvalidPathFormatException("Output" + " must have a file name: " + outputOption);
-					}
+					TaskOptionUtils.requireForwardRelativePathWithFileName(outputOption, "Output");
 					outputpath = outputOption;
 				} else {
 					if (inputfl == null) {

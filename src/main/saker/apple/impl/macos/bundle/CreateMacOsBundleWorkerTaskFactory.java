@@ -7,7 +7,7 @@ import java.io.ObjectOutput;
 import java.util.NavigableMap;
 import java.util.NavigableSet;
 
-import saker.apple.api.macos.bundle.CreateMacosBundleWorkerTaskOutput;
+import saker.apple.api.macos.bundle.CreateMacOsBundleWorkerTaskOutput;
 import saker.build.file.path.SakerPath;
 import saker.build.runtime.execution.ExecutionContext;
 import saker.build.task.Task;
@@ -21,8 +21,8 @@ import saker.std.api.dir.prepare.PrepareDirectoryWorkerTaskOutput;
 import saker.std.api.file.location.FileLocation;
 import saker.std.api.util.SakerStandardTaskUtils;
 
-public class CreateMacosBundleWorkerTaskFactory implements TaskFactory<CreateMacosBundleWorkerTaskOutput>,
-		Task<CreateMacosBundleWorkerTaskOutput>, Externalizable {
+public class CreateMacOsBundleWorkerTaskFactory implements TaskFactory<CreateMacOsBundleWorkerTaskOutput>,
+		Task<CreateMacOsBundleWorkerTaskOutput>, Externalizable {
 	private static final long serialVersionUID = 1L;
 
 	private TaskFactory<? extends PrepareDirectoryWorkerTaskOutput> prepareTaskFactory;
@@ -30,26 +30,26 @@ public class CreateMacosBundleWorkerTaskFactory implements TaskFactory<CreateMac
 	/**
 	 * For {@link Externalizable}.
 	 */
-	public CreateMacosBundleWorkerTaskFactory() {
+	public CreateMacOsBundleWorkerTaskFactory() {
 	}
 
-	public CreateMacosBundleWorkerTaskFactory(NavigableMap<SakerPath, FileLocation> resources) {
+	public CreateMacOsBundleWorkerTaskFactory(NavigableMap<SakerPath, FileLocation> resources) {
 		this(SakerStandardTaskUtils.createPrepareDirectoryTaskFactory(resources));
 	}
 
-	public CreateMacosBundleWorkerTaskFactory(
+	public CreateMacOsBundleWorkerTaskFactory(
 			TaskFactory<? extends PrepareDirectoryWorkerTaskOutput> prepareTaskFactory) {
 		this.prepareTaskFactory = prepareTaskFactory;
 	}
 
 	@Override
-	public Task<? extends CreateMacosBundleWorkerTaskOutput> createTask(ExecutionContext executioncontext) {
+	public Task<? extends CreateMacOsBundleWorkerTaskOutput> createTask(ExecutionContext executioncontext) {
 		return this;
 	}
 
 	@Override
-	public CreateMacosBundleWorkerTaskOutput run(TaskContext taskcontext) throws Exception {
-		CrateMacosBundleWorkerTaskIdentifier taskid = (CrateMacosBundleWorkerTaskIdentifier) taskcontext.getTaskId();
+	public CreateMacOsBundleWorkerTaskOutput run(TaskContext taskcontext) throws Exception {
+		CrateMacOsBundleWorkerTaskIdentifier taskid = (CrateMacOsBundleWorkerTaskIdentifier) taskcontext.getTaskId();
 
 		PrepareDirectoryWorkerTaskOutput prepareout = taskcontext.getTaskUtilities().runTaskResult(
 				SakerStandardTaskUtils.createPrepareDirectoryTaskIdentifier(taskid.getOutputPath()),
@@ -67,7 +67,7 @@ public class CreateMacosBundleWorkerTaskFactory implements TaskFactory<CreateMac
 					}
 				});
 
-		CreateMacosBundleWorkerTaskOutputImpl result = new CreateMacosBundleWorkerTaskOutputImpl(diroutpath,
+		CreateMacOsBundleWorkerTaskOutputImpl result = new CreateMacOsBundleWorkerTaskOutputImpl(diroutpath,
 				mappingpaths);
 		taskcontext.reportSelfTaskOutputChangeDetector(new EqualityTaskOutputChangeDetector(result));
 		return result;
@@ -99,7 +99,7 @@ public class CreateMacosBundleWorkerTaskFactory implements TaskFactory<CreateMac
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		CreateMacosBundleWorkerTaskFactory other = (CreateMacosBundleWorkerTaskFactory) obj;
+		CreateMacOsBundleWorkerTaskFactory other = (CreateMacOsBundleWorkerTaskFactory) obj;
 		if (prepareTaskFactory == null) {
 			if (other.prepareTaskFactory != null)
 				return false;

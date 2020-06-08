@@ -4,8 +4,8 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.NavigableMap;
 import java.util.Map.Entry;
+import java.util.NavigableMap;
 
 import saker.apple.impl.xcode.ApplePlatformSDKInformation;
 import saker.apple.impl.xcode.XcodeSDKVersions;

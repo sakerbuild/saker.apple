@@ -113,6 +113,7 @@ static CFReference<CFNumberRef> toCFObject(JNIEnv *env, jlong value) {
 
 struct CFConversionContext {
 	JNIEnv* env;
+	jclass objectclass = NULL;
 	jclass strclass = NULL;
 	jclass longclass = NULL;
 	jclass doubleclass = NULL;
@@ -122,6 +123,7 @@ struct CFConversionContext {
 	jclass setclass = NULL;
 	jclass iteratorclass = NULL;
 	jclass entryclass = NULL;
+	jclass treemapclass = NULL;
 
 	CFConversionContext(JNIEnv *env) :
 			env(env) {
@@ -445,6 +447,111 @@ static jstring cfStringToJString(JNIEnv *env, CFStringRef str) {
 	return result;
 }
 
+static jobject cfToJavaObject(CFConversionContext &cc, const void *val) {
+	JNIEnv* env = cc.env;
+	auto valtypeid = CFGetTypeID(val);
+	auto strtypeid = CFStringGetTypeID();
+	if (valtypeid == strtypeid) {
+		CFStringRef strref = (CFStringRef) val;
+		return cfStringToJString(env, strref);
+	}
+	if (valtypeid == CFBooleanGetTypeID()) {
+		auto booleanclass = getClass(env, &cc.booleanclass, "java/lang/Boolean");
+		static jmethodID valueOfMethod = env->GetStaticMethodID(booleanclass, "valueOf", "(Z)Ljava/lang/Boolean;");
+		return env->CallStaticObjectMethod(booleanclass, valueOfMethod, CFBooleanGetValue((CFBooleanRef) val));
+	}
+	if (valtypeid == CFDictionaryGetTypeID()) {
+		CFDictionaryRef dict = (CFDictionaryRef) val;
+		auto treemapclass = getClass(env, &cc.treemapclass, "java/util/TreeMap");
+
+		static jmethodID initmethod = env->GetMethodID(treemapclass, "<init>", "()V");
+		jobject result = env->NewObject(treemapclass, initmethod);
+		if (result == NULL) {
+			//errors thrown automatically
+			return NULL;
+		}
+		auto length = CFDictionaryGetCount(dict);
+		if (length > 0) {
+			const void** buf = new const void*[length * 2];
+			CFDictionaryGetKeysAndValues(dict, buf, buf + length);
+			for (unsigned int i = 0; i < length; ++i) {
+				auto key = buf[i];
+				auto value = buf[length + i];
+				if (CFGetTypeID(key) != strtypeid) {
+					javaException(env, "java/lang/UnsupportedOperationException", "Non-string key found in plist.");
+					delete[] buf;
+					return NULL;
+				}
+				jstring keystr = cfStringToJString(env, (CFStringRef) key);
+				if (keystr == NULL) {
+					//failed to convert or something
+					delete[] buf;
+					return NULL;
+				}
+				jobject valobj = cfToJavaObject(cc, value);
+				if (valobj == NULL) {
+					//failed to convert or something
+					delete[] buf;
+					return NULL;
+				}
+
+				static jmethodID putMethod = env->GetMethodID(treemapclass, "put",
+						"(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+				jobject prev = env->CallObjectMethod(result, putMethod, keystr, valobj);
+				if (prev != NULL) {
+					env->DeleteLocalRef(prev);
+				}
+
+				env->DeleteLocalRef(keystr);
+				env->DeleteLocalRef(valobj);
+			}
+			delete[] buf;
+		}
+		return result;
+	}
+	if (valtypeid == CFArrayGetTypeID()) {
+		CFArrayRef array = (CFArrayRef) val;
+		auto length = CFArrayGetCount(array);
+
+		jobjectArray result = env->NewObjectArray(length, getClass(env, &cc.objectclass, "java/lang/Object"), NULL);
+		if (result == NULL) {
+			//OutOfMemoryError is thrown automatically
+			return NULL;
+		}
+		for (CFIndex i = 0; i < length; ++i) {
+			auto elem = CFArrayGetValueAtIndex(array, i);
+			jobject elemobj = cfToJavaObject(cc, elem);
+			if (elemobj == NULL) {
+				//some error happened
+				return NULL;
+			}
+			env->SetObjectArrayElement(result, i, elemobj);
+			env->DeleteLocalRef(elemobj);
+		}
+		return result;
+	}
+	if (valtypeid == CFNumberGetTypeID()) {
+		CFNumberRef num = (CFNumberRef) val;
+		if (CFNumberIsFloatType(num)) {
+			double v = 0;
+			CFNumberGetValue(num, kCFNumberDoubleType, &v);
+
+			auto doubleclass = getClass(env, &cc.doubleclass, "java/lang/Double");
+			static jmethodID valueOfMethod = env->GetStaticMethodID(doubleclass, "valueOf", "(D)Ljava/lang/Double;");
+			return env->CallStaticObjectMethod(doubleclass, valueOfMethod, v);
+		} else {
+			long long v = 0;
+			CFNumberGetValue(num, kCFNumberLongLongType, &v);
+
+			auto longclass = getClass(env, &cc.longclass, "java/lang/Long");
+			static jmethodID valueOfMethod = env->GetStaticMethodID(longclass, "valueOf", "(J)Ljava/lang/Long;");
+			return env->CallStaticObjectMethod(longclass, valueOfMethod, (jlong) v);
+		}
+	}
+	javaException(env, "java/lang/UnsupportedOperationException", "Failed to return unsupported plist value type.");
+	return NULL;
+}
+
 JNIEXPORT jobject JNICALL Java_saker_apple_impl_plist_lib_Plist_getValue(JNIEnv *env, jclass clazz, jlong ptr,
 		jstring key) {
 	PlistImpl& plist = *reinterpret_cast<PlistImpl*>(ptr);
@@ -454,19 +561,8 @@ JNIEXPORT jobject JNICALL Java_saker_apple_impl_plist_lib_Plist_getValue(JNIEnv 
 	if (val == NULL) {
 		return NULL;
 	}
-	auto valtypeid = CFGetTypeID(val);
-	if (valtypeid == CFStringGetTypeID()) {
-		CFStringRef strref = (CFStringRef) val;
-		return cfStringToJString(env, strref);
-	}
-//	if (valtypeid == CFBooleanGetTypeID()) {
-//		if (CFBooleanGetValue((CFBooleanRef) val)) {
-//
-//		}
-//	}
-	//TODO implement
-	javaException(env, "java/lang/UnsupportedOperationException", "Failed to return unsupported plist value type.");
-	return NULL;
+	CFConversionContext cc(env);
+	return cfToJavaObject(cc, cc);
 }
 
 JNIEXPORT void JNICALL Java_saker_apple_impl_plist_lib_Plist_release(

@@ -2,7 +2,6 @@ package saker.apple.main.plist;
 
 import saker.apple.impl.plist.ConvertPlistWorkerTaskFactory;
 import saker.apple.impl.plist.ConvertPlistWorkerTaskIdentifier;
-import saker.build.exception.InvalidPathFormatException;
 import saker.build.file.path.SakerPath;
 import saker.build.runtime.execution.ExecutionContext;
 import saker.build.task.ParameterizableTask;
@@ -45,12 +44,7 @@ public class ConvertPlistTaskFactory extends FrontendTaskFactory<Object> {
 
 				SakerPath outputpath;
 				if (outputOption != null) {
-					if (!outputOption.isForwardRelative()) {
-						throw new InvalidPathFormatException("Output" + " must be forward relative: " + outputOption);
-					}
-					if (outputOption.getFileName() == null) {
-						throw new InvalidPathFormatException("Output" + " must have a file name: " + outputOption);
-					}
+					TaskOptionUtils.requireForwardRelativePathWithFileName(outputOption, "Output");
 					outputpath = outputOption;
 				} else {
 					outputpath = SakerPath.valueOf(SakerStandardUtils.getFileLocationFileName(inputfl));
