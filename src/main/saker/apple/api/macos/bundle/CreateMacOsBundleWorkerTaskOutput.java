@@ -8,5 +8,6 @@ public interface CreateMacOsBundleWorkerTaskOutput {
 	public SakerPath getAppDirectory();
 
 	//relative bundle paths to absolute execution paths
+	//files only
 	public NavigableMap<SakerPath, SakerPath> getMappings();
 }

@@ -23,7 +23,7 @@ private:
 	template<typename >
 	friend class CFReference;
 
-	bool owned = TRUE;
+	bool owned = true;
 	T _ref;
 public:
 	CFReference(T ref = NULL) :
@@ -58,6 +58,10 @@ public:
 
 	T ref() {
 		return _ref;
+	}
+
+	void disown() {
+		owned = false;
 	}
 };
 
@@ -128,7 +132,7 @@ struct CFConversionContext {
 	CFConversionContext(JNIEnv *env) :
 			env(env) {
 	}
-	operator JNIEnv*() {
+	explicit operator JNIEnv*() {
 		return env;
 	}
 };
@@ -176,6 +180,91 @@ static CFReference<CFTypeRef> toCFObject(CFConversionContext &cc, jobjectArray v
 	}
 	return arrayref;
 }
+static CFReference<CFTypeRef> mapToCFObject(CFConversionContext &cc, jobject o) {
+	JNIEnv* env = cc.env;
+	static jmethodID sizemethod = env->GetMethodID(getClass(env, &cc.mapclass, "java/util/Map"), "size", "()I");
+	jint size = env->CallIntMethod(o, sizemethod);
+	if (env->ExceptionCheck()) {
+		return nullptr;
+	}
+	CFMutableDictionaryRef ref = CFDictionaryCreateMutable(NULL, size, &kCFTypeDictionaryKeyCallBacks,
+			&kCFTypeDictionaryValueCallBacks);
+	if (ref == NULL) {
+		javaException(env, "java/lang/RuntimeException", "Failed to create CFDictionary for plist.");
+		return nullptr;
+	}
+	static jmethodID entrySetMethod = env->GetMethodID(getClass(env, &cc.mapclass, "java/util/Map"), "entrySet", "()Ljava/util/Set;");
+	jobject entryset = env->CallObjectMethod(o, entrySetMethod);
+	if (entryset == nullptr) {
+		if (env->ExceptionCheck()) {
+			return nullptr;
+		}
+		javaException(env, "java/lang/NullPointerException", "Null entry set.");
+		return nullptr;
+	}
+	static jmethodID iteratorMethod = env->GetMethodID(getClass(env, &cc.setclass, "java/util/Set"), "iterator",
+			"()Ljava/util/Iterator;");
+	jobject iterator = env->CallObjectMethod(entryset, iteratorMethod);
+	if (iterator == NULL) {
+		if (env->ExceptionCheck()) {
+			return nullptr;
+		}
+		javaException(env, "java/lang/NullPointerException", "Null iterator.");
+		return nullptr;
+	}
+	env->DeleteLocalRef(entryset);
+	static jmethodID hasNextMethod = env->GetMethodID(getClass(env, &cc.iteratorclass, "java/util/Iterator"), "hasNext",
+			"()Z");
+	while (env->CallBooleanMethod(iterator, hasNextMethod)) {
+		static jmethodID nextMethod = env->GetMethodID(getClass(env, &cc.iteratorclass, "java/util/Iterator"), "next",
+				"()Ljava/lang/Object;");
+		//Entry<?, ?>
+		jobject entry = env->CallObjectMethod(iterator, nextMethod);
+		if (entry == NULL) {
+			if (env->ExceptionCheck()) {
+				return nullptr;
+			}
+			javaException(env, "java/lang/NullPointerException", "Null plist entry.");
+			return nullptr;
+		}
+
+		static jmethodID getKeyMethod = env->GetMethodID(getClass(env, &cc.entryclass, "java/util/Map$Entry"), "getKey",
+				"()Ljava/lang/Object;");
+		static jmethodID getValueMethod = env->GetMethodID(getClass(env, &cc.entryclass, "java/util/Map$Entry"),
+				"getValue", "()Ljava/lang/Object;");
+		jstring key = (jstring) env->CallObjectMethod(entry, getKeyMethod);
+		if (key == NULL) {
+			if (env->ExceptionCheck()) {
+				return nullptr;
+			}
+			javaException(env, "java/lang/NullPointerException", "Null key.");
+			return nullptr;
+		}
+		jobject value = env->CallObjectMethod(entry, getValueMethod);
+		if (value == NULL) {
+			if (env->ExceptionCheck()) {
+				return nullptr;
+			}
+			javaException(env, "java/lang/NullPointerException", "Null value.");
+			return nullptr;
+		}
+		auto cfkey = toCFString(env, key);
+		env->DeleteLocalRef(key);
+		auto cfval = toCFObject(cc, value);
+		env->DeleteLocalRef(value);
+		if (cfkey == nullptr || cfval == nullptr) {
+			return nullptr;
+		}
+
+		CFDictionarySetValue(ref, cfkey, cfval);
+
+		env->DeleteLocalRef(entry);
+	}
+	if (env->ExceptionCheck()) {
+		return nullptr;
+	}
+	return ref;
+}
 static CFReference<CFTypeRef> toCFObject(CFConversionContext &cc, jobject o) {
 	JNIEnv* env = cc.env;
 	if (o == NULL) {
@@ -188,12 +277,12 @@ static CFReference<CFTypeRef> toCFObject(CFConversionContext &cc, jobject o) {
 	if (isObjectInstanceOf(env, &cc.longclass, "java/lang/Long", o)) {
 		static jmethodID valuemethod = env->GetMethodID(cc.longclass, "longValue", "()J");
 		jlong val = env->CallLongMethod(o, valuemethod);
-		return toCFObject(cc, val);
+		return toCFObject(env, val);
 	}
 	if (isObjectInstanceOf(env, &cc.doubleclass, "java/lang/Double", o)) {
 		static jmethodID valuemethod = env->GetMethodID(cc.doubleclass, "doubleValue", "()D");
 		jdouble val = env->CallDoubleMethod(o, valuemethod);
-		return toCFObject(cc, val);
+		return toCFObject(env, val);
 	}
 	if (isObjectInstanceOf(env, &cc.booleanclass, "java/lang/Boolean", o)) {
 		static jmethodID valuemethod = env->GetMethodID(cc.booleanclass, "booleanValue", "()Z");
@@ -206,88 +295,7 @@ static CFReference<CFTypeRef> toCFObject(CFConversionContext &cc, jobject o) {
 		return toCFObject(cc, array);
 	}
 	if (isObjectInstanceOf(env, &cc.mapclass, "java/util/Map", o)) {
-		static jmethodID sizemethod = env->GetMethodID(cc.mapclass, "size", "()I");
-		jint size = env->CallIntMethod(o, sizemethod);
-		if (env->ExceptionCheck()) {
-			return nullptr;
-		}
-		CFMutableDictionaryRef ref = CFDictionaryCreateMutable(NULL, size, &kCFTypeDictionaryKeyCallBacks,
-				&kCFTypeDictionaryValueCallBacks);
-		if (ref == NULL) {
-			javaException(env, "java/lang/RuntimeException", "Failed to create CFDictionary for plist.");
-			return nullptr;
-		}
-		static jmethodID entrySetMethod = env->GetMethodID(cc.mapclass, "entrySet", "()Ljava/util/Set;");
-		jobject entryset = env->CallObjectMethod(o, entrySetMethod);
-		if (entryset == nullptr) {
-			if (env->ExceptionCheck()) {
-				return nullptr;
-			}
-			javaException(env, "java/lang/NullPointerException", "Null entry set.");
-			return nullptr;
-		}
-		static jmethodID iteratorMethod = env->GetMethodID(getClass(env, &cc.setclass, "java/util/Set"), "iterator",
-				"()Ljava/util/Iterator;");
-		jobject iterator = env->CallObjectMethod(entryset, iteratorMethod);
-		if (iterator == NULL) {
-			if (env->ExceptionCheck()) {
-				return nullptr;
-			}
-			javaException(env, "java/lang/NullPointerException", "Null iterator.");
-			return nullptr;
-		}
-		env->DeleteLocalRef(entryset);
-		static jmethodID hasNextMethod = env->GetMethodID(getClass(env, &cc.iteratorclass, "java/util/Iterator"),
-				"hasNext", "()Z");
-		while (env->CallBooleanMethod(iterator, hasNextMethod)) {
-			static jmethodID nextMethod = env->GetMethodID(getClass(env, &cc.iteratorclass, "java/util/Iterator"),
-					"next", "()Ljava/lang/Object;");
-			//Entry<?, ?>
-			jobject entry = env->CallObjectMethod(iterator, nextMethod);
-			if (entry == NULL) {
-				if (env->ExceptionCheck()) {
-					return nullptr;
-				}
-				javaException(env, "java/lang/NullPointerException", "Null plist entry.");
-				return nullptr;
-			}
-
-			static jmethodID getKeyMethod = env->GetMethodID(getClass(env, &cc.entryclass, "java/util/Map$Entry"),
-					"getKey", "()Ljava/lang/Object;");
-			static jmethodID getValueMethod = env->GetMethodID(getClass(env, &cc.entryclass, "java/util/Map$Entry"),
-					"getValue", "()Ljava/lang/Object;");
-			jstring key = (jstring) env->CallObjectMethod(entry, getKeyMethod);
-			if (key == NULL) {
-				if (env->ExceptionCheck()) {
-					return nullptr;
-				}
-				javaException(env, "java/lang/NullPointerException", "Null key.");
-				return nullptr;
-			}
-			jobject value = env->CallObjectMethod(entry, getValueMethod);
-			if (value == NULL) {
-				if (env->ExceptionCheck()) {
-					return nullptr;
-				}
-				javaException(env, "java/lang/NullPointerException", "Null value.");
-				return nullptr;
-			}
-			auto cfkey = toCFString(env, key);
-			env->DeleteLocalRef(key);
-			auto cfval = toCFObject(cc, value);
-			env->DeleteLocalRef(value);
-			if (cfkey == nullptr || cfval == nullptr) {
-				return nullptr;
-			}
-
-			CFDictionarySetValue(ref, cfkey, cfval);
-
-			env->DeleteLocalRef(entry);
-		}
-		if (env->ExceptionCheck()) {
-			return nullptr;
-		}
-		return ref;
+		return mapToCFObject(cc, o);
 	}
 	javaException(env, "java/lang/IllegalArgumentException", "Unrecognized Java plist type.");
 	return nullptr;
@@ -302,6 +310,19 @@ JNIEXPORT jlong JNICALL Java_saker_apple_impl_plist_lib_Plist_createEmptyPlist(J
 	}
 	return reinterpret_cast<jlong>(new PlistImpl(ref, kCFPropertyListXMLFormat_v1_0));
 }
+
+JNIEXPORT jlong JNICALL Java_saker_apple_impl_plist_lib_Plist_createContentPlist(JNIEnv *env, jclass clazz,
+		jobject dictionary) {
+	CFConversionContext cc(env);
+	auto ref = mapToCFObject(cc, dictionary);
+	if (ref == nullptr) {
+		return NULL;
+	}
+	ref.disown();
+
+	return reinterpret_cast<jlong>(new PlistImpl((CFPropertyListRef) ref, kCFPropertyListXMLFormat_v1_0));
+}
+
 JNIEXPORT jlong JNICALL Java_saker_apple_impl_plist_lib_Plist_createFromBytes(JNIEnv *env, jclass clazz,
 		jbyteArray bytes, jint offset, jint length) {
 	jbyte* nativebytes = env->GetByteArrayElements(bytes, NULL);
@@ -562,7 +583,7 @@ JNIEXPORT jobject JNICALL Java_saker_apple_impl_plist_lib_Plist_getValue(JNIEnv 
 		return NULL;
 	}
 	CFConversionContext cc(env);
-	return cfToJavaObject(cc, cc);
+	return cfToJavaObject(cc, val);
 }
 
 JNIEXPORT void JNICALL Java_saker_apple_impl_plist_lib_Plist_release(

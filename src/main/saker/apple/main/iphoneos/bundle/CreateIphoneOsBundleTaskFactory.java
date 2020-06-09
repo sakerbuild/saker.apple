@@ -3,7 +3,7 @@ package saker.apple.main.iphoneos.bundle;
 import java.util.Collection;
 import java.util.NavigableMap;
 
-import saker.apple.impl.iphoneos.bundle.CrateIphoneOsBundleWorkerTaskIdentifier;
+import saker.apple.impl.iphoneos.bundle.CreateIphoneOsBundleWorkerTaskIdentifier;
 import saker.apple.impl.iphoneos.bundle.CreateIphoneOsBundleWorkerTaskFactory;
 import saker.apple.main.macos.bundle.CreateMacOsBundleTaskFactory;
 import saker.build.file.path.SakerPath;
@@ -33,7 +33,7 @@ public class CreateIphoneOsBundleTaskFactory extends FrontendTaskFactory<Object>
 	public ParameterizableTask<? extends Object> createTask(ExecutionContext executioncontext) {
 		return new ParameterizableTask<Object>() {
 
-			@SakerInput(value = { "", "Contents" })
+			@SakerInput(value = { "", "Contents" }, required = true)
 			public Collection<RelativeContentsTaskOption> contentsOption;
 
 			@SakerInput(value = "GeneratePkgInfo")
@@ -71,7 +71,7 @@ public class CreateIphoneOsBundleTaskFactory extends FrontendTaskFactory<Object>
 					outputpath = SakerPath.valueOf(TASK_NAME).resolve("default.app");
 				}
 
-				TaskIdentifier workertaskid = new CrateIphoneOsBundleWorkerTaskIdentifier(outputpath);
+				TaskIdentifier workertaskid = new CreateIphoneOsBundleWorkerTaskIdentifier(outputpath);
 				CreateIphoneOsBundleWorkerTaskFactory workertask = new CreateIphoneOsBundleWorkerTaskFactory(
 						inputmappings);
 				taskcontext.startTask(workertaskid, workertask, null);

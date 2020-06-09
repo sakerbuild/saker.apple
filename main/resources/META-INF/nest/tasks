@@ -4,6 +4,7 @@ saker.apple.sdk.platform=saker.apple.main.sdk.PlatformSDKTaskFactory
 saker.apple.sdk.xcode=saker.apple.main.sdk.XcodeSDKTaskFactory
 saker.apple.strip=saker.apple.main.strip.StripTaskFactory
 saker.iphoneos.bundle.create=saker.apple.main.iphoneos.bundle.CreateIphoneOsBundleTaskFactory
+saker.iphoneos.sign=saker.apple.main.iphoneos.sign.SignIphoneOsTaskFactory
 saker.macos.bundle.create=saker.apple.main.macos.bundle.CreateMacOsBundleTaskFactory
 saker.plist.convert=saker.apple.main.plist.ConvertPlistTaskFactory
 saker.plist.insert=saker.apple.main.plist.InsertPlistTaskFactory

@@ -49,7 +49,7 @@ public class CreateIphoneOsBundleWorkerTaskFactory implements TaskFactory<Create
 
 	@Override
 	public CreateIphoneOsBundleWorkerTaskOutput run(TaskContext taskcontext) throws Exception {
-		CrateIphoneOsBundleWorkerTaskIdentifier taskid = (CrateIphoneOsBundleWorkerTaskIdentifier) taskcontext
+		CreateIphoneOsBundleWorkerTaskIdentifier taskid = (CreateIphoneOsBundleWorkerTaskIdentifier) taskcontext
 				.getTaskId();
 
 		PrepareDirectoryWorkerTaskOutput prepareout = taskcontext.getTaskUtilities().runTaskResult(

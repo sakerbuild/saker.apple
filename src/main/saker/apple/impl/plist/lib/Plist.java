@@ -3,6 +3,7 @@ package saker.apple.impl.plist.lib;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Native;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
@@ -36,6 +37,12 @@ public class Plist implements AutoCloseable {
 		return new Plist(createEmptyPlist());
 	}
 
+	public static Plist createWithContents(Map<String, ?> dictionary) {
+		Objects.requireNonNull(dictionary, "dictionary");
+		checkLoaded();
+		return new Plist(createContentPlist(dictionary));
+	}
+
 	public static Plist readFrom(InputStream is) throws IOException {
 		checkLoaded();
 		ByteArrayRegion bytes = StreamUtils.readStreamFully(is);
@@ -44,7 +51,12 @@ public class Plist implements AutoCloseable {
 
 	public Object get(String key) {
 		Objects.requireNonNull(key, "key");
-		return getValue(ptr, key);
+		use();
+		try {
+			return getValue(ptr, key);
+		} finally {
+			release();
+		}
 	}
 
 	public void set(String key, String value) {
@@ -122,6 +134,8 @@ public class Plist implements AutoCloseable {
 	}
 
 	private static native long createEmptyPlist();
+
+	private static native long createContentPlist(Map<String, ?> dictionary);
 
 	private static native long createFromBytes(byte[] bytes, int offset, int length) throws IOException;
 
