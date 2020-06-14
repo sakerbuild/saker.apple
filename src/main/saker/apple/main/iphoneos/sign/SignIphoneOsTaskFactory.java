@@ -148,6 +148,8 @@ public class SignIphoneOsTaskFactory extends FrontendTaskFactory<Object> {
 		return SakerPath.valueOf("default.app");
 	}
 
+	@NestInformation("An iPhone application package.\n" + "The option accepts the output of the "
+			+ CreateIphoneOsBundleTaskFactory.TASK_NAME + "() task.")
 	public static class IphoneOsApplicationTaskOption {
 		private SakerPath appDirectory;
 		private NavigableMap<SakerPath, SakerPath> mappings;
