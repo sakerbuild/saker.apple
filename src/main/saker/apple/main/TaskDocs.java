@@ -1,8 +1,7 @@
 package saker.apple.main;
 
+import java.util.Map;
 import java.util.Set;
-
-import com.sun.javafx.collections.MappingChange.Map;
 
 import saker.apple.main.plist.InsertPlistTaskFactory;
 import saker.apple.main.plist.PlistFormatTaskOption;
