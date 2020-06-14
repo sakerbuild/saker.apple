@@ -2,6 +2,7 @@ package saker.apple.main.plist;
 
 import saker.apple.impl.plist.ConvertPlistWorkerTaskFactory;
 import saker.apple.impl.plist.ConvertPlistWorkerTaskIdentifier;
+import saker.apple.main.TaskDocs.DocConvertPlistWorkerTaskOutput;
 import saker.build.file.path.SakerPath;
 import saker.build.runtime.execution.ExecutionContext;
 import saker.build.task.ParameterizableTask;
@@ -10,12 +11,33 @@ import saker.build.task.utils.SimpleStructuredObjectTaskResult;
 import saker.build.task.utils.annot.SakerInput;
 import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
 import saker.build.trace.BuildTrace;
+import saker.nest.scriptinfo.reflection.annot.NestInformation;
+import saker.nest.scriptinfo.reflection.annot.NestParameterInformation;
+import saker.nest.scriptinfo.reflection.annot.NestTaskInformation;
+import saker.nest.scriptinfo.reflection.annot.NestTypeUsage;
 import saker.nest.utils.FrontendTaskFactory;
 import saker.std.api.file.location.FileLocation;
 import saker.std.api.util.SakerStandardUtils;
 import saker.std.main.file.option.FileLocationTaskOption;
 import saker.std.main.file.utils.TaskOptionUtils;
 
+@NestTaskInformation(returnType = @NestTypeUsage(DocConvertPlistWorkerTaskOutput.class))
+@NestInformation("Converts between different representations of a plist file.\n"
+		+ "The task can be used to transform a property list file into a different format.")
+
+@NestParameterInformation(value = "Input",
+		aliases = { "" },
+		required = true,
+		type = @NestTypeUsage(FileLocationTaskOption.class),
+		info = @NestInformation("Specifies the input plist file which is to be converted."))
+@NestParameterInformation(value = "Format",
+		type = @NestTypeUsage(PlistFormatTaskOption.class),
+		info = @NestInformation("Specifies the output format of the plist.\n" + "It is "
+				+ PlistFormatTaskOption.FORMAT_BINARY1 + " by default."))
+@NestParameterInformation(value = "Output",
+		type = @NestTypeUsage(SakerPath.class),
+		info = @NestInformation("A forward relative output path that specifies the output location of the converted plist.\n"
+				+ "It can be used to have a better output location than the automatically generated one."))
 public class ConvertPlistTaskFactory extends FrontendTaskFactory<Object> {
 	private static final long serialVersionUID = 1L;
 

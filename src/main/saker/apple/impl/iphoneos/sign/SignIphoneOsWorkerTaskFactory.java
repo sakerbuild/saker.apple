@@ -37,6 +37,7 @@ import saker.build.task.Task;
 import saker.build.task.TaskContext;
 import saker.build.task.TaskExecutionUtilities;
 import saker.build.task.TaskFactory;
+import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
 import saker.build.thirdparty.saker.util.ImmutableUtils;
 import saker.build.thirdparty.saker.util.ObjectUtils;
 import saker.build.thirdparty.saker.util.io.SerialUtils;
@@ -264,7 +265,7 @@ public class SignIphoneOsWorkerTaskFactory
 					SakerDirectory touchparentdir = taskutils.resolveDirectoryAtPathCreate(unmirrorpath.getParent());
 					SakerFile providerfile = taskutils.createProviderPathFile(unmirrorpath.getFileName(), pathkey);
 					touchparentdir.add(providerfile);
-					
+
 					outputdependencies.put(unmirrorpath, providerfile.getContentDescriptor());
 				}
 			}
@@ -274,8 +275,9 @@ public class SignIphoneOsWorkerTaskFactory
 		taskutils.reportInputFileDependency(null, inputdependencies);
 		taskutils.reportOutputFileDependency(null, outputdependencies);
 
-		// TODO Auto-generated method stub
-		return null;
+		SignIphoneOsWorkerTaskOutputImpl result = new SignIphoneOsWorkerTaskOutputImpl();
+		taskcontext.reportSelfTaskOutputChangeDetector(new EqualityTaskOutputChangeDetector(result));
+		return result;
 	}
 
 	@Override

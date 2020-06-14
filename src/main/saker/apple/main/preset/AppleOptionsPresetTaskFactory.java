@@ -1,4 +1,4 @@
-package saker.apple.main.clang;
+package saker.apple.main.preset;
 
 import java.io.Externalizable;
 import java.io.IOException;
@@ -17,7 +17,9 @@ import java.util.TreeMap;
 import saker.apple.api.SakerAppleUtils;
 import saker.apple.impl.plist.PlistValueOption;
 import saker.apple.impl.sdk.VersionsXcodeSDKDescription;
-import saker.apple.main.sdk.PlatformSDKTaskFactory;
+import saker.apple.main.TaskDocs.DocAppleArchitecture;
+import saker.apple.main.TaskDocs.DocAppleOptionsPreset;
+import saker.apple.main.TaskDocs.DocApplePlatformOption;
 import saker.build.runtime.execution.ExecutionContext;
 import saker.build.runtime.execution.SakerLog;
 import saker.build.task.ParameterizableTask;
@@ -32,6 +34,10 @@ import saker.build.trace.BuildTrace;
 import saker.clang.main.options.ClangPresetTaskOption;
 import saker.compiler.utils.api.CompilationIdentifier;
 import saker.compiler.utils.main.CompilationIdentifierTaskOption;
+import saker.nest.scriptinfo.reflection.annot.NestInformation;
+import saker.nest.scriptinfo.reflection.annot.NestParameterInformation;
+import saker.nest.scriptinfo.reflection.annot.NestTaskInformation;
+import saker.nest.scriptinfo.reflection.annot.NestTypeUsage;
 import saker.nest.utils.FrontendTaskFactory;
 import saker.sdk.support.api.SDKDescription;
 import saker.sdk.support.api.SDKPathReference;
@@ -40,14 +46,72 @@ import saker.sdk.support.api.SDKSupportUtils;
 import saker.sdk.support.main.SDKSupportFrontendUtils;
 import saker.sdk.support.main.option.SDKDescriptionTaskOption;
 
+@NestTaskInformation(returnType = @NestTypeUsage(DocAppleOptionsPreset.class))
+@NestInformation("Create a configuration for compiling and creating applications for various Apple platforms.\n"
+		+ "The result of this task can be passed to the saker.clang.compile() and saker.clang.link() tasks "
+		+ "for their CompilerOptions and LinkerOptions parameters to configure them appropriately to create "
+		+ "applications for the specified platforms.\n"
+		+ "The InfoPlistValues field of the result can be used to fill the required plist values for your application.")
+
+@NestParameterInformation(value = "Platform",
+		aliases = "",
+		type = @NestTypeUsage(DocApplePlatformOption.class),
+		info = @NestInformation("Specifies the development target platform.\n"
+				+ "The target platform determines some of the clang parameters as well as various "
+				+ "values that are to be present in the Info.plist file for the application.\n"
+				+ "A default SDK will also be added based on the platform (if not already present)."))
+@NestParameterInformation(value = "PlatformMinVersion",
+		type = @NestTypeUsage(String.class),
+		info = @NestInformation("Specifies the minimum platform version that the application requires.\n"
+				+ "The minimum version causes the appropriate -m<PLATFORM>-version-min parameter to be added "
+				+ "to the clang arguments, as well as adds requirements for the application Info.plist."))
+@NestParameterInformation(value = "Architecture",
+		type = @NestTypeUsage(DocAppleArchitecture.class),
+		info = @NestInformation("Specifies the target architecture for the compilation.\n"
+				+ "The value of this parameter will be added as a clang argument for the -arch option.\n"
+				+ "If not specified, a default one is inferred based on the Platform. If set to null, no architecture "
+				+ "based configuration is added."))
+@NestParameterInformation(value = "Release",
+		type = @NestTypeUsage(boolean.class),
+		info = @NestInformation("Specifies the kind of optimization related configuration that should be used.\n"
+				+ "If this parameter is set to true, the configuration will use options for release optimization. "
+				+ "Otherwise it is configured for debugging.\n"
+				+ "If set to null, no optimization related options are used.\n" + "The default is false."))
+@NestParameterInformation(value = "AutomaticReferenceCounting",
+		aliases = "ARC",
+		type = @NestTypeUsage(boolean.class),
+		info = @NestInformation("Sets whether or not automatic reference counting should be used.\n"
+				+ "If set to true, -fobjc-arc argument is added to clang.\n" + "The default is true."))
+@NestParameterInformation(value = "Libraries",
+		type = @NestTypeUsage(value = Collection.class, elementTypes = String.class),
+		info = @NestInformation("Specifies libraries that should be linked with the application.\n"
+				+ "The given libraries are added to the clang linking phase as the -l<LIB> argument."))
+@NestParameterInformation(value = "Frameworks",
+		type = @NestTypeUsage(value = Collection.class, elementTypes = String.class),
+		info = @NestInformation("Specifies frameworks that the application uses.\n"
+				+ "The given frameworks are added to the clang linking phase as the -framework <NAME> argument."))
+@NestParameterInformation(value = "AddRPath",
+		type = @NestTypeUsage(boolean.class),
+		info = @NestInformation("Sets whether or not the -rpath parameter should be added for the clang linker.\n"
+				+ "If set to true, the -rpath argument is passed to the backend linker with an approriate value for the"
+				+ "specified platform.\n" + "The default is true."))
+@NestParameterInformation(value = "Identifier",
+		type = @NestTypeUsage(CompilationIdentifierTaskOption.class),
+		info = @NestInformation("Compilation identifier that specifies for which compilations this preset can be applied to."))
+@NestParameterInformation(value = "SDKs",
+		type = @NestTypeUsage(value = Map.class,
+				elementTypes = { saker.sdk.support.main.TaskDocs.DocSdkNameOption.class,
+						SDKDescriptionTaskOption.class }),
+		info = @NestInformation("Specifies the SDKs (Software Development Kits) that are part of the configuration.\n"
+				+ "The SDKs will be passed to the clang task, and also available with the SDKs field of the result.\n"
+				+ "Appropriate SDKs for the given Platform, clang, and developer macOS will be added by default."))
 public class AppleOptionsPresetTaskFactory extends FrontendTaskFactory<Object> {
 	private static final long serialVersionUID = 1L;
 
 	public static final String TASK_NAME = "saker.apple.preset";
 
-	//TODO check these values, especially arm64_32
 	public static final Set<String> KNOWN_ARCHITECTURES = ImmutableUtils.makeImmutableNavigableSet(
-			new String[] { "x86_64", "armv7", "arm64", "i386", "armv7k", "armv7s", "arm64_32" });
+			new String[] { "x86_64", "armv7", "arm64", "arm64e", "i386", "armv7k", "armv7s", "arm64_32" });
 
 	@Override
 	public ParameterizableTask<? extends Object> createTask(ExecutionContext executioncontext) {
@@ -124,10 +188,10 @@ public class AppleOptionsPresetTaskFactory extends FrontendTaskFactory<Object> {
 				}
 
 				if (platform != null) {
-					if (!PlatformSDKTaskFactory.KNOWN_PLATFORMS.contains(platform)) {
+					if (!DocApplePlatformOption.KNOWN_PLATFORMS.contains(platform)) {
 						SakerLog.warning().taskScriptPosition(taskcontext)
 								.println("Unrecognized platform name: " + platform + " expected one of: "
-										+ StringUtils.toStringJoin(", ", PlatformSDKTaskFactory.KNOWN_PLATFORMS));
+										+ StringUtils.toStringJoin(", ", DocApplePlatformOption.KNOWN_PLATFORMS));
 					}
 					if (platformVersionMinOption != null) {
 						String param = getMinVersionClangArgument(platform, platformVersionMinOption);

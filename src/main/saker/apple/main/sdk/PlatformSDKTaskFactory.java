@@ -5,6 +5,7 @@ import java.util.Locale;
 import java.util.Set;
 
 import saker.apple.impl.sdk.VersionsApplePlatformSDKDescription;
+import saker.apple.main.TaskDocs.DocApplePlatformOption;
 import saker.build.runtime.execution.ExecutionContext;
 import saker.build.runtime.execution.SakerLog;
 import saker.build.task.ParameterizableTask;
@@ -14,18 +15,32 @@ import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
 import saker.build.thirdparty.saker.util.ImmutableUtils;
 import saker.build.thirdparty.saker.util.StringUtils;
 import saker.build.trace.BuildTrace;
+import saker.nest.scriptinfo.reflection.annot.NestInformation;
+import saker.nest.scriptinfo.reflection.annot.NestParameterInformation;
+import saker.nest.scriptinfo.reflection.annot.NestTaskInformation;
+import saker.nest.scriptinfo.reflection.annot.NestTypeUsage;
 import saker.nest.utils.FrontendTaskFactory;
 import saker.sdk.support.api.SDKDescription;
+import saker.sdk.support.main.TaskDocs.DocSDKDescription;
 
+@NestTaskInformation(returnType = @NestTypeUsage(DocSDKDescription.class))
+@NestInformation("Gets an SDK description for an Apple development platform.\n"
+		+ "The target platform is one of the platforms or operating systems for which Apple provides "
+		+ "developer utilities.\n" + "The SDK description can be passed to tasks that support it.")
+@NestParameterInformation(value = "Platform",
+		aliases = "",
+		type = @NestTypeUsage(DocApplePlatformOption.class),
+		info = @NestInformation("Specifies the development target platform.\n"
+				+ "The platform is used to determine the base paths for tools that are used to target it. "
+				+ "E.g. sysroot, framework and include paths, etc..."))
+@NestParameterInformation(value = "Version",
+		aliases = { "Versions" },
+		type = @NestTypeUsage(value = Collection.class, elementTypes = String.class),
+		info = @NestInformation("Specifies expected the versions or version ranges of the target platforms."))
 public class PlatformSDKTaskFactory extends FrontendTaskFactory<SDKDescription> {
 	private static final long serialVersionUID = 1L;
 
 	public static final String TASK_NAME = "saker.apple.sdk.platform";
-
-	public static final Set<String> KNOWN_PLATFORMS = ImmutableUtils.makeImmutableNavigableSet(new String[] {
-			"iphoneos", "iphonesimulator", "macosx", "appletvos", "appletvsimulator", "watchos", "watchsimulator",
-			//macos is also recognized by us, but converted to macosx internally
-			"macos", });
 
 	@Override
 	public ParameterizableTask<? extends SDKDescription> createTask(ExecutionContext executioncontext) {
@@ -47,9 +62,10 @@ public class PlatformSDKTaskFactory extends FrontendTaskFactory<SDKDescription> 
 				if ("macos".equals(platform)) {
 					platform = "macosx";
 				}
-				if (!KNOWN_PLATFORMS.contains(platform)) {
-					SakerLog.warning().taskScriptPosition(taskcontext).println("Unrecognized platform name: " + platform
-							+ " expected one of: " + StringUtils.toStringJoin(", ", KNOWN_PLATFORMS));
+				if (!DocApplePlatformOption.KNOWN_PLATFORMS.contains(platform)) {
+					SakerLog.warning().taskScriptPosition(taskcontext)
+							.println("Unrecognized platform name: " + platform + " expected one of: "
+									+ StringUtils.toStringJoin(", ", DocApplePlatformOption.KNOWN_PLATFORMS));
 				}
 
 				Set<String> versions = ImmutableUtils.makeImmutableNavigableSet(versionsOption);

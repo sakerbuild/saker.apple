@@ -8,7 +8,7 @@ import java.io.ObjectOutput;
 import saker.build.file.path.SakerPath;
 import saker.build.task.identifier.TaskIdentifier;
 
-public class LipoWorkerTaskIdentifier implements TaskIdentifier, Externalizable {
+public class LipoCreateWorkerTaskIdentifier implements TaskIdentifier, Externalizable {
 	private static final long serialVersionUID = 1L;
 
 	private SakerPath outputPath;
@@ -16,10 +16,10 @@ public class LipoWorkerTaskIdentifier implements TaskIdentifier, Externalizable 
 	/**
 	 * For {@link Externalizable}.
 	 */
-	public LipoWorkerTaskIdentifier() {
+	public LipoCreateWorkerTaskIdentifier() {
 	}
 
-	public LipoWorkerTaskIdentifier(SakerPath outputPath) {
+	public LipoCreateWorkerTaskIdentifier(SakerPath outputPath) {
 		this.outputPath = outputPath;
 	}
 
@@ -53,7 +53,7 @@ public class LipoWorkerTaskIdentifier implements TaskIdentifier, Externalizable 
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		LipoWorkerTaskIdentifier other = (LipoWorkerTaskIdentifier) obj;
+		LipoCreateWorkerTaskIdentifier other = (LipoCreateWorkerTaskIdentifier) obj;
 		if (outputPath == null) {
 			if (other.outputPath != null)
 				return false;

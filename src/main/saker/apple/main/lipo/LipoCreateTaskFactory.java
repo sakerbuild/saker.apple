@@ -6,9 +6,11 @@ import java.util.Map;
 import java.util.NavigableMap;
 
 import saker.apple.api.SakerAppleUtils;
-import saker.apple.impl.lipo.LipoWorkerTaskFactory;
-import saker.apple.impl.lipo.LipoWorkerTaskIdentifier;
+import saker.apple.impl.lipo.LipoCreateWorkerTaskFactory;
+import saker.apple.impl.lipo.LipoCreateWorkerTaskIdentifier;
 import saker.apple.impl.sdk.VersionsXcodeSDKDescription;
+import saker.apple.main.TaskDocs;
+import saker.apple.main.TaskDocs.DocLipoCreateWorkerTaskOutput;
 import saker.build.file.path.SakerPath;
 import saker.build.runtime.execution.ExecutionContext;
 import saker.build.task.ParameterizableTask;
@@ -18,6 +20,10 @@ import saker.build.task.utils.annot.SakerInput;
 import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
 import saker.build.thirdparty.saker.util.ObjectUtils;
 import saker.build.trace.BuildTrace;
+import saker.nest.scriptinfo.reflection.annot.NestInformation;
+import saker.nest.scriptinfo.reflection.annot.NestParameterInformation;
+import saker.nest.scriptinfo.reflection.annot.NestTypeInformation;
+import saker.nest.scriptinfo.reflection.annot.NestTypeUsage;
 import saker.nest.utils.FrontendTaskFactory;
 import saker.sdk.support.api.SDKDescription;
 import saker.sdk.support.main.SDKSupportFrontendUtils;
@@ -27,10 +33,29 @@ import saker.std.api.util.SakerStandardUtils;
 import saker.std.main.file.option.MultiFileLocationTaskOption;
 import saker.std.main.file.utils.TaskOptionUtils;
 
-public class LipoTaskFactory extends FrontendTaskFactory<Object> {
+@NestTypeInformation(relatedTypes = @NestTypeUsage(DocLipoCreateWorkerTaskOutput.class))
+@NestInformation("Create an universal file from the inputs using the lipo tool.\n"
+		+ "The task takes multiple input files and packs them into an universal file. "
+		+ "It is generally used to create an universal executable that contains code for multiple architectures.")
+
+@NestParameterInformation(value = "Input",
+		aliases = { "" },
+		required = true,
+		type = @NestTypeUsage(value = Collection.class, elementTypes = { MultiFileLocationTaskOption.class }),
+		info = @NestInformation("Specifies the input files which should be included in the output universal file."))
+@NestParameterInformation(value = "Output",
+		type = @NestTypeUsage(SakerPath.class),
+		info = @NestInformation("A forward relative output path that specifies the output location of the universal file.\n"
+				+ "It can be used to have a better output location than the automatically generated one."))
+@NestParameterInformation(value = "SDKs",
+		type = @NestTypeUsage(value = Map.class,
+				elementTypes = { saker.sdk.support.main.TaskDocs.DocSdkNameOption.class,
+						SDKDescriptionTaskOption.class }),
+		info = @NestInformation(TaskDocs.SDKS))
+public class LipoCreateTaskFactory extends FrontendTaskFactory<Object> {
 	private static final long serialVersionUID = 1L;
 
-	public static final String TASK_NAME = "saker.apple.lipo";
+	public static final String TASK_NAME = "saker.apple.lipo.create";
 
 	private static final SakerPath DEFAULT_OUTPUT_PATH = SakerPath.valueOf("default");
 
@@ -71,8 +96,8 @@ public class LipoTaskFactory extends FrontendTaskFactory<Object> {
 					outputpath = SakerPath.valueOf(TASK_NAME).resolve(inferDefaultOutputPathFromInputPaths(inputfiles));
 				}
 
-				LipoWorkerTaskIdentifier workertaskid = new LipoWorkerTaskIdentifier(outputpath);
-				LipoWorkerTaskFactory workertask = new LipoWorkerTaskFactory(inputfiles);
+				LipoCreateWorkerTaskIdentifier workertaskid = new LipoCreateWorkerTaskIdentifier(outputpath);
+				LipoCreateWorkerTaskFactory workertask = new LipoCreateWorkerTaskFactory(inputfiles);
 				workertask.setSDKDescriptions(sdkdescriptions);
 
 				taskcontext.startTask(workertaskid, workertask, null);

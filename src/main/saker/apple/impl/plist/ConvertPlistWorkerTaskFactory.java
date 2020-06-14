@@ -2,21 +2,15 @@ package saker.apple.impl.plist;
 
 import java.io.Externalizable;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.UUID;
 
 import saker.apple.api.plist.ConvertPlistWorkerTaskOutput;
 import saker.apple.impl.plist.lib.Plist;
 import saker.apple.main.plist.ConvertPlistTaskFactory;
 import saker.build.file.ByteArraySakerFile;
 import saker.build.file.SakerDirectory;
-import saker.build.file.SakerFile;
-import saker.build.file.content.ContentDescriptor;
-import saker.build.file.content.DirectoryContentDescriptor;
 import saker.build.file.path.SakerPath;
-import saker.build.file.provider.LocalFileProvider;
 import saker.build.file.provider.SakerPathFiles;
 import saker.build.runtime.execution.ExecutionContext;
 import saker.build.task.Task;
@@ -24,15 +18,9 @@ import saker.build.task.TaskContext;
 import saker.build.task.TaskExecutionUtilities;
 import saker.build.task.TaskFactory;
 import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
-import saker.build.thirdparty.saker.util.ObjectUtils;
 import saker.build.thirdparty.saker.util.io.SerialUtils;
-import saker.build.thirdparty.saker.util.io.function.IOSupplier;
 import saker.build.trace.BuildTrace;
-import saker.std.api.file.location.ExecutionFileLocation;
 import saker.std.api.file.location.FileLocation;
-import saker.std.api.file.location.FileLocationVisitor;
-import saker.std.api.file.location.LocalFileLocation;
-import saker.std.api.util.SakerStandardUtils;
 
 public class ConvertPlistWorkerTaskFactory
 		implements TaskFactory<ConvertPlistWorkerTaskOutput>, Task<ConvertPlistWorkerTaskOutput>, Externalizable {
@@ -85,40 +73,14 @@ public class ConvertPlistWorkerTaskFactory
 		SakerDirectory outputdir = taskutils.resolveDirectoryAtRelativePathCreate(
 				SakerPathFiles.requireBuildDirectory(taskcontext), relativeoutputpath.getParent());
 
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		IOSupplier<? extends InputStream>[] streamsupplier = new IOSupplier[] { null };
-		input.accept(new FileLocationVisitor() {
-			@Override
-			public void visit(LocalFileLocation loc) {
-				SakerPath path = loc.getLocalPath();
-				ContentDescriptor cd = taskutils.getReportExecutionDependency(
-						SakerStandardUtils.createLocalFileContentDescriptorExecutionProperty(path, UUID.randomUUID()));
-				if (cd == null || cd instanceof DirectoryContentDescriptor) {
-					throw ObjectUtils.sneakyThrow(new NoSuchFieldError("Not a file: " + path));
-				}
-				streamsupplier[0] = () -> LocalFileProvider.getInstance().openInputStream(path);
-			}
-
-			@Override
-			public void visit(ExecutionFileLocation loc) {
-				SakerPath path = loc.getPath();
-				SakerFile f = taskutils.resolveFileAtPath(path);
-				if (f == null) {
-					throw ObjectUtils.sneakyThrow(new NoSuchFieldError("Not a file: " + path));
-				}
-				taskcontext.reportInputFileDependency(null, path, f.getContentDescriptor());
-				streamsupplier[0] = f::openInputStream;
-			}
-		});
 		String outputfilename = relativeoutputpath.getFileName();
 
 		ByteArraySakerFile outfile;
-		try (InputStream is = streamsupplier[0].get()) {
-			try (Plist plist = Plist.readFrom(is)) {
-				byte[] serialized = plist.serialize(getPlistFormat());
-				outfile = new ByteArraySakerFile(outputfilename, serialized);
-			}
+		try (Plist plist = InsertPlistWorkerTaskFactory.getPlistReportDependencyForFileLocation(taskcontext, input)) {
+			byte[] serialized = plist.serialize(getPlistFormat());
+			outfile = new ByteArraySakerFile(outputfilename, serialized);
 		}
+
 		outputdir.add(outfile);
 		outfile.synchronize();
 

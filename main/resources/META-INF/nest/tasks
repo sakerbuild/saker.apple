@@ -1,5 +1,5 @@
-saker.apple.lipo=saker.apple.main.lipo.LipoTaskFactory
-saker.apple.preset=saker.apple.main.clang.AppleOptionsPresetTaskFactory
+saker.apple.lipo.create=saker.apple.main.lipo.LipoCreateTaskFactory
+saker.apple.preset=saker.apple.main.preset.AppleOptionsPresetTaskFactory
 saker.apple.sdk.dev_macos=saker.apple.main.sdk.DevMacOsSDKTaskFactory
 saker.apple.sdk.platform=saker.apple.main.sdk.PlatformSDKTaskFactory
 saker.apple.sdk.xcode=saker.apple.main.sdk.XcodeSDKTaskFactory

@@ -5,20 +5,70 @@ import saker.apple.impl.sdk.VersionsDeveloperMacOsSDKDescription;
 import saker.apple.impl.sdk.VersionsXcodeSDKDescription;
 import saker.sdk.support.api.SDKDescription;
 
+/**
+ * Utility class for interacting with the saker.apple package.
+ */
 public class SakerAppleUtils {
 
+	/**
+	 * SDK name for the Xcode SDK.
+	 */
 	public static final String SDK_NAME_XCODE = "Xcode";
+	/**
+	 * SDK name for the SDK representing the developer macOS information.
+	 */
 	public static final String SDK_NAME_DEVELOPER_MAC_OS = "DevMacOS";
 
+	/**
+	 * Apple platform SDK name for iPhone.
+	 * <p>
+	 * SDK constants in this class starting with <code>SDK_APPLEPLATFORM_*</code> can be used with this SDK.
+	 */
 	public static final String SDK_NAME_PLATFORM_IPHONEOS = "iPhoneOS";
+	/**
+	 * Apple platform SDK name for iPhone simulator.
+	 * <p>
+	 * SDK constants in this class starting with <code>SDK_APPLEPLATFORM_*</code> can be used with this SDK.
+	 */
 	public static final String SDK_NAME_PLATFORM_IPHONESIMULATOR = "iPhoneSimulator";
+	/**
+	 * Apple platform SDK name for macOS.
+	 * <p>
+	 * SDK constants in this class starting with <code>SDK_APPLEPLATFORM_*</code> can be used with this SDK.
+	 */
 	public static final String SDK_NAME_PLATFORM_MACOS = "MacOS";
+	/**
+	 * Apple platform SDK name for Apple TV.
+	 * <p>
+	 * SDK constants in this class starting with <code>SDK_APPLEPLATFORM_*</code> can be used with this SDK.
+	 */
 	public static final String SDK_NAME_PLATFORM_APPLETVOS = "AppleTVOS";
+	/**
+	 * Apple platform SDK name for Apple TV simulator.
+	 * <p>
+	 * SDK constants in this class starting with <code>SDK_APPLEPLATFORM_*</code> can be used with this SDK.
+	 */
 	public static final String SDK_NAME_PLATFORM_APPLETVSIMULATOR = "AppleTVSimulator";
+	/**
+	 * Apple platform SDK name for watchOS.
+	 * <p>
+	 * SDK constants in this class starting with <code>SDK_APPLEPLATFORM_*</code> can be used with this SDK.
+	 */
 	public static final String SDK_NAME_PLATFORM_WATCHOS = "WatchOS";
+	/**
+	 * Apple platform SDK name for watchOS simulator.
+	 * <p>
+	 * SDK constants in this class starting with <code>SDK_APPLEPLATFORM_*</code> can be used with this SDK.
+	 */
 	public static final String SDK_NAME_PLATFORM_WATCHSIMULATOR = "WatchSimulator";
 
+	/**
+	 * SDK name for the strip tool.
+	 */
 	public static final String SDK_NAME_STRIP = "Strip";
+	/**
+	 * SDK name for the lipo tool.
+	 */
 	public static final String SDK_NAME_LIPO = "Lipo";
 
 	/**

@@ -13,8 +13,8 @@ import java.util.NavigableMap;
 import java.util.UUID;
 
 import saker.apple.api.SakerAppleUtils;
-import saker.apple.api.lipo.LipoWorkerTaskOutput;
-import saker.apple.main.lipo.LipoTaskFactory;
+import saker.apple.api.lipo.LipoCreateWorkerTaskOutput;
+import saker.apple.main.lipo.LipoCreateTaskFactory;
 import saker.build.file.DirectoryVisitPredicate;
 import saker.build.file.SakerDirectory;
 import saker.build.file.SakerFile;
@@ -48,8 +48,8 @@ import saker.std.api.file.location.FileLocationVisitor;
 import saker.std.api.file.location.LocalFileLocation;
 import saker.std.api.util.SakerStandardUtils;
 
-public class LipoWorkerTaskFactory
-		implements TaskFactory<LipoWorkerTaskOutput>, Task<LipoWorkerTaskOutput>, Externalizable {
+public class LipoCreateWorkerTaskFactory
+		implements TaskFactory<LipoCreateWorkerTaskOutput>, Task<LipoCreateWorkerTaskOutput>, Externalizable {
 	private static final long serialVersionUID = 1L;
 
 	private List<FileLocation> inputs;
@@ -59,10 +59,10 @@ public class LipoWorkerTaskFactory
 	/**
 	 * For {@link Externalizable}.
 	 */
-	public LipoWorkerTaskFactory() {
+	public LipoCreateWorkerTaskFactory() {
 	}
 
-	public LipoWorkerTaskFactory(Collection<? extends FileLocation> inputs) {
+	public LipoCreateWorkerTaskFactory(Collection<? extends FileLocation> inputs) {
 		this.inputs = ImmutableUtils.makeImmutableList(inputs);
 	}
 
@@ -77,13 +77,13 @@ public class LipoWorkerTaskFactory
 	}
 
 	@Override
-	public LipoWorkerTaskOutput run(TaskContext taskcontext) throws Exception {
-		LipoWorkerTaskIdentifier taskid = (LipoWorkerTaskIdentifier) taskcontext.getTaskId();
+	public LipoCreateWorkerTaskOutput run(TaskContext taskcontext) throws Exception {
+		LipoCreateWorkerTaskIdentifier taskid = (LipoCreateWorkerTaskIdentifier) taskcontext.getTaskId();
 		SakerPath outputpath = taskid.getOutputPath();
 		String fname = outputpath.getFileName();
 		if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
 			BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_WORKER);
-			BuildTrace.setDisplayInformation("lipo:" + fname, LipoTaskFactory.TASK_NAME + ":" + fname);
+			BuildTrace.setDisplayInformation("lipo:" + fname, LipoCreateTaskFactory.TASK_NAME + ":" + fname);
 		}
 		taskcontext.setStandardOutDisplayIdentifier("lipo:" + fname);
 
@@ -169,11 +169,11 @@ public class LipoWorkerTaskFactory
 		SakerPath outputabsolutepath = outputfile.getSakerPath();
 		taskcontext.reportOutputFileDependency(null, outputabsolutepath, outputfile.getContentDescriptor());
 
-		return new LipoTaskOutputImpl(outputabsolutepath);
+		return new LipoCreateTaskOutputImpl(outputabsolutepath);
 	}
 
 	@Override
-	public Task<? extends LipoWorkerTaskOutput> createTask(ExecutionContext executioncontext) {
+	public Task<? extends LipoCreateWorkerTaskOutput> createTask(ExecutionContext executioncontext) {
 		return this;
 	}
 
@@ -209,7 +209,7 @@ public class LipoWorkerTaskFactory
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		LipoWorkerTaskFactory other = (LipoWorkerTaskFactory) obj;
+		LipoCreateWorkerTaskFactory other = (LipoCreateWorkerTaskFactory) obj;
 		if (inputs == null) {
 			if (other.inputs != null)
 				return false;

@@ -80,7 +80,7 @@ public class InsertPlistWorkerTaskFactory
 		return 1;
 	}
 
-	private int getPlistFormat() {
+	private int getPlistOutputFormat() {
 		if (format == null) {
 			return Plist.FORMAT_SAME_AS_INPUT;
 		}
@@ -161,7 +161,7 @@ public class InsertPlistWorkerTaskFactory
 		String outputfilename = relativeoutputpath.getFileName();
 
 		ByteArraySakerFile outfile;
-		int actualformat;
+		int outputformat;
 		try (Plist plist = plistsupplier[0].get()) {
 			for (Entry<String, PlistValueOption> entry : values.entrySet()) {
 				String key = entry.getKey();
@@ -173,11 +173,11 @@ public class InsertPlistWorkerTaskFactory
 					plist.set(key, valobj);
 				}
 			}
-			actualformat = getPlistFormat();
-			byte[] serialized = plist.serialize(actualformat);
+			outputformat = getPlistOutputFormat();
+			byte[] serialized = plist.serialize(outputformat);
 			outfile = new ByteArraySakerFile(outputfilename, serialized);
-			if (actualformat == Plist.FORMAT_SAME_AS_INPUT) {
-				actualformat = plist.getFormat();
+			if (outputformat == Plist.FORMAT_SAME_AS_INPUT) {
+				outputformat = plist.getFormat();
 			}
 		}
 		outputdir.add(outfile);
@@ -187,7 +187,7 @@ public class InsertPlistWorkerTaskFactory
 		taskcontext.reportOutputFileDependency(null, outputsakerpath, outfile.getContentDescriptor());
 
 		String strformat;
-		switch (actualformat) {
+		switch (outputformat) {
 			case Plist.FORMAT_BINARY: {
 				strformat = "binary1";
 				break;
@@ -197,7 +197,7 @@ public class InsertPlistWorkerTaskFactory
 				break;
 			}
 			default: {
-				throw new UnsupportedOperationException("Unrecognized plist format: " + actualformat);
+				throw new UnsupportedOperationException("Unrecognized plist format: " + outputformat);
 			}
 		}
 		InsertPlistWorkerTaskOutputImpl result = new InsertPlistWorkerTaskOutputImpl(outputsakerpath, strformat);

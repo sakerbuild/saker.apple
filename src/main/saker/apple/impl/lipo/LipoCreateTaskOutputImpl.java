@@ -5,11 +5,11 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 
-import saker.apple.api.lipo.LipoWorkerTaskOutput;
+import saker.apple.api.lipo.LipoCreateWorkerTaskOutput;
 import saker.build.file.path.SakerPath;
 import saker.build.thirdparty.saker.util.io.SerialUtils;
 
-final class LipoTaskOutputImpl implements LipoWorkerTaskOutput, Externalizable {
+final class LipoCreateTaskOutputImpl implements LipoCreateWorkerTaskOutput, Externalizable {
 	private static final long serialVersionUID = 1L;
 
 	private SakerPath path;
@@ -17,10 +17,10 @@ final class LipoTaskOutputImpl implements LipoWorkerTaskOutput, Externalizable {
 	/**
 	 * For {@link Externalizable}.
 	 */
-	public LipoTaskOutputImpl() {
+	public LipoCreateTaskOutputImpl() {
 	}
 
-	public LipoTaskOutputImpl(SakerPath path) {
+	public LipoCreateTaskOutputImpl(SakerPath path) {
 		this.path = path;
 	}
 

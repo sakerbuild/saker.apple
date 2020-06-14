@@ -5,6 +5,7 @@ import java.util.NavigableMap;
 import saker.apple.api.iphoneos.bundle.CreateIphoneOsBundleWorkerTaskOutput;
 import saker.apple.impl.iphoneos.sign.SignIphoneOsWorkerTaskFactory;
 import saker.apple.impl.iphoneos.sign.SignIphoneOsWorkerTaskIdentifier;
+import saker.apple.main.TaskDocs.DocSignIphoneOsWorkerTaskOutput;
 import saker.apple.main.iphoneos.bundle.CreateIphoneOsBundleTaskFactory;
 import saker.build.file.path.SakerPath;
 import saker.build.runtime.execution.ExecutionContext;
@@ -16,11 +17,48 @@ import saker.build.task.utils.annot.SakerInput;
 import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
 import saker.build.thirdparty.saker.util.StringUtils;
 import saker.build.trace.BuildTrace;
+import saker.nest.scriptinfo.reflection.annot.NestInformation;
+import saker.nest.scriptinfo.reflection.annot.NestParameterInformation;
+import saker.nest.scriptinfo.reflection.annot.NestTaskInformation;
+import saker.nest.scriptinfo.reflection.annot.NestTypeUsage;
 import saker.nest.utils.FrontendTaskFactory;
 import saker.std.api.file.location.FileLocation;
 import saker.std.main.file.option.FileLocationTaskOption;
 import saker.std.main.file.utils.TaskOptionUtils;
 
+@NestTaskInformation(returnType = @NestTypeUsage(DocSignIphoneOsWorkerTaskOutput.class))
+@NestInformation("Signs an iPhone application bundle.\n"
+		+ "The task takes a previously created iPhone application bundle as input, and signs it with the "
+		+ "specified provisioning profile and signing identity.\n"
+		+ "The build task will NOT sign the application in-place, but rather copy its contents to a different "
+		+ "output location and perform the signing there.")
+
+@NestParameterInformation(value = "Application",
+		aliases = "",
+		required = true,
+		type = @NestTypeUsage(SignIphoneOsTaskFactory.IphoneOsApplicationTaskOption.class),
+		info = @NestInformation("Specifies the application that should be signed."))
+@NestParameterInformation(value = "SigningIdentity",
+		type = @NestTypeUsage(String.class),
+		required = true,
+		info = @NestInformation("The signing identity to be used when performing the operation.\n"
+				+ "The signing identity is used to determine the certificate for the signature.\n"
+				+ "This parameter is passed as the --sign argument for the codesign tool.\n"
+				+ "It is recommended that the value of this parameter is exactly 40 hexadecimal digits "
+				+ "that corresponds to a valid signing identity. You can list the signing identities using the\n"
+				+ "security find-identity -v -p codesigning\n"
+				+ "command. Look for the hash value at the start of the listed identities."))
+@NestParameterInformation(value = "ProvisioningProfile",
+		type = @NestTypeUsage(FileLocationTaskOption.class),
+		required = true,
+		info = @NestInformation("Specifies the provisioning profile that should be embedded in the application.\n"
+				+ "The provisioning profile specifies the entitlements of the application.\n"
+				+ "The specified provisioning profile will be part of the application contents with the embedded.mobileprovision file name.\n"
+				+ "The entitlements of the profile will be extracted and passed as the --entitlements option for the codesign tool."))
+@NestParameterInformation(value = "Output",
+		type = @NestTypeUsage(SakerPath.class),
+		info = @NestInformation("A forward relative output path that specifies the output location of the signed application contents.\n"
+				+ "It can be used to have a better output location than the automatically generated one."))
 public class SignIphoneOsTaskFactory extends FrontendTaskFactory<Object> {
 	private static final long serialVersionUID = 1L;
 

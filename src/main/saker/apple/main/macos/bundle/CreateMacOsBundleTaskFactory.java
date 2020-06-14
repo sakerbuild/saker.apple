@@ -16,6 +16,7 @@ import java.util.UUID;
 import saker.apple.impl.macos.bundle.CrateMacOsBundleWorkerTaskIdentifier;
 import saker.apple.impl.macos.bundle.CreateMacOsBundleWorkerTaskFactory;
 import saker.apple.impl.plist.lib.Plist;
+import saker.apple.main.TaskDocs.DocCreateMacOsBundleWorkerTaskOutput;
 import saker.build.file.SakerFile;
 import saker.build.file.content.ContentDescriptor;
 import saker.build.file.content.DirectoryContentDescriptor;
@@ -31,6 +32,10 @@ import saker.build.task.utils.dependencies.EqualityTaskOutputChangeDetector;
 import saker.build.thirdparty.saker.util.ObjectUtils;
 import saker.build.trace.BuildTrace;
 import saker.nest.bundle.NestBundleClassLoader;
+import saker.nest.scriptinfo.reflection.annot.NestInformation;
+import saker.nest.scriptinfo.reflection.annot.NestParameterInformation;
+import saker.nest.scriptinfo.reflection.annot.NestTaskInformation;
+import saker.nest.scriptinfo.reflection.annot.NestTypeUsage;
 import saker.nest.utils.FrontendTaskFactory;
 import saker.std.api.file.location.ExecutionFileLocation;
 import saker.std.api.file.location.FileLocation;
@@ -40,7 +45,59 @@ import saker.std.api.util.SakerStandardUtils;
 import saker.std.main.dir.prepare.RelativeContentsTaskOption;
 import saker.std.main.file.utils.TaskOptionUtils;
 
+@NestTaskInformation(returnType = @NestTypeUsage(DocCreateMacOsBundleWorkerTaskOutput.class))
+@NestInformation("Creates a macOS application bundle with the specified contents.\n"
+		+ "The task can be used to create the .app application bundle for a macOS app. It will "
+		+ "fill a directory with the contents of the application in the specified manner.\n"
+		+ "Please refer to https://developer.apple.com/library/archive/documentation/CoreFoundation/Conceptual/CFBundles/BundleTypes/BundleTypes.html "
+		+ "for the structure of a macOS application.")
+
+@NestParameterInformation(value = "Contents",
+		aliases = { "" },
+		type = @NestTypeUsage(value = Collection.class, elementTypes = { RelativeContentsTaskOption.class }),
+		info = @NestInformation("Specifies the files of the application for the Contents directory.\n"
+				+ "All files specified in the parameter are placed in the Contents directory of the application bundle."))
+@NestParameterInformation(value = "Resources",
+		aliases = { "" },
+		type = @NestTypeUsage(value = Collection.class, elementTypes = { RelativeContentsTaskOption.class }),
+		info = @NestInformation("Specifies the files of the application for the Contents/Resources directory.\n"
+				+ "All files specified in the parameter are placed in the Contents/Resources directory of the application bundle."))
+@NestParameterInformation(value = "MacOS",
+		aliases = { "" },
+		type = @NestTypeUsage(value = Collection.class, elementTypes = { RelativeContentsTaskOption.class }),
+		info = @NestInformation("Specifies the files of the application for the Contents/MacOS directory.\n"
+				+ "All files specified in the parameter are placed in the Contents/MacOS directory of the application bundle.\n"
+				+ "Typically, this directory contains only one binary file with your application’s main entry point and statically linked code. "
+				+ "However, you may put other standalone executables (such as command-line tools) in this directory as well."))
+@NestParameterInformation(value = "Frameworks",
+		aliases = { "" },
+		type = @NestTypeUsage(value = Collection.class, elementTypes = { RelativeContentsTaskOption.class }),
+		info = @NestInformation("Specifies the files of the application for the Contents/Frameworks directory.\n"
+				+ "All files specified in the parameter are placed in the Contents/Frameworks directory of the application bundle."))
+@NestParameterInformation(value = "PlugIns",
+		aliases = { "" },
+		type = @NestTypeUsage(value = Collection.class, elementTypes = { RelativeContentsTaskOption.class }),
+		info = @NestInformation("Specifies the files of the application for the Contents/PlugIns directory.\n"
+				+ "All files specified in the parameter are placed in the Contents/PlugIns directory of the application bundle."))
+@NestParameterInformation(value = "SharedSupport",
+		aliases = { "" },
+		type = @NestTypeUsage(value = Collection.class, elementTypes = { RelativeContentsTaskOption.class }),
+		info = @NestInformation("Specifies the files of the application for the Contents/SharedSupport directory.\n"
+				+ "All files specified in the parameter are placed in the Contents/SharedSupport directory of the application bundle."))
+@NestParameterInformation(value = "GeneratePkgInfo",
+		type = @NestTypeUsage(boolean.class),
+		info = @NestInformation("Specifies whether or not the PkgInfo file should be automatically generated for the application.\n"
+				+ "If set to true, the PkgInfo file will be generated with appropriate contents for the application. The contents "
+				+ "are determined based on the Info.plist file entries.\n" + "The default is true.\n"
+				+ "If the PkgInfo file is already specified as content or no Info.plist file is given, then "
+				+ "it won't be generated."))
+@NestParameterInformation(value = "Output",
+		type = @NestTypeUsage(SakerPath.class),
+		info = @NestInformation("A forward relative output path that specifies the output location of the application contents.\n"
+				+ "It can be used to have a better output location than the automatically generated one."))
 public class CreateMacOsBundleTaskFactory extends FrontendTaskFactory<Object> {
+	private static final long serialVersionUID = 1L;
+
 	private static final SakerPath PATH_CONTENTS_PKGINFO = SakerPath.valueOf("Contents/PkgInfo");
 	private static final SakerPath PATH_CONTENTS_INFOPLIST = SakerPath.valueOf("Contents/Info.plist");
 	private static final SakerPath PATH_CONTENTS = SakerPath.valueOf("Contents");
@@ -51,8 +108,6 @@ public class CreateMacOsBundleTaskFactory extends FrontendTaskFactory<Object> {
 	private static final SakerPath PATH_CONTENTS_SHAREDSUPPORT = SakerPath.valueOf("Contents/SharedSupport");
 
 	private static final Object DEP_TAG_INFOPLIST = "dep-tag-info-plist";
-
-	private static final long serialVersionUID = 1L;
 
 	public static final String TASK_NAME = "saker.macos.bundle.create";
 
@@ -105,7 +160,7 @@ public class CreateMacOsBundleTaskFactory extends FrontendTaskFactory<Object> {
 						FileLocation plist = inputmappings.get(PATH_CONTENTS_INFOPLIST);
 						if (plist != null) {
 							inputmappings.put(PATH_CONTENTS_PKGINFO,
-									getPkgInfoFileLocationBasedOnInfoPlits(taskcontext, plist));
+									getPkgInfoFileLocationBasedOnInfoPlist(taskcontext, plist));
 						}
 						//else don't auto generate the pkginfo as we don't have an info.plist
 					}
@@ -132,7 +187,7 @@ public class CreateMacOsBundleTaskFactory extends FrontendTaskFactory<Object> {
 		};
 	}
 
-	public static FileLocation getPkgInfoFileLocationBasedOnInfoPlits(TaskContext taskcontext, FileLocation plist) {
+	public static FileLocation getPkgInfoFileLocationBasedOnInfoPlist(TaskContext taskcontext, FileLocation plist) {
 		FileLocation[] result = { null };
 		plist.accept(new FileLocationVisitor() {
 			@Override
