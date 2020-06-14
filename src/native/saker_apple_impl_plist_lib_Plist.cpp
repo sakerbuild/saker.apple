@@ -193,7 +193,8 @@ static CFReference<CFTypeRef> mapToCFObject(CFConversionContext &cc, jobject o) 
 		javaException(env, "java/lang/RuntimeException", "Failed to create CFDictionary for plist.");
 		return nullptr;
 	}
-	static jmethodID entrySetMethod = env->GetMethodID(getClass(env, &cc.mapclass, "java/util/Map"), "entrySet", "()Ljava/util/Set;");
+	static jmethodID entrySetMethod = env->GetMethodID(getClass(env, &cc.mapclass, "java/util/Map"), "entrySet",
+			"()Ljava/util/Set;");
 	jobject entryset = env->CallObjectMethod(o, entrySetMethod);
 	if (entryset == nullptr) {
 		if (env->ExceptionCheck()) {
@@ -584,6 +585,27 @@ JNIEXPORT jobject JNICALL Java_saker_apple_impl_plist_lib_Plist_getValue(JNIEnv 
 	}
 	CFConversionContext cc(env);
 	return cfToJavaObject(cc, val);
+}
+JNIEXPORT void JNICALL Java_saker_apple_impl_plist_lib_Plist_removeValue(JNIEnv* env, jclass clazz, jlong ptr, jstring key) {
+	PlistImpl& plist = *reinterpret_cast<PlistImpl*>(ptr);
+
+	CFDictionaryRemoveValue((CFMutableDictionaryRef) plist.propertyList.ref(), toCFString(env, key));
+}
+JNIEXPORT jint JNICALL Java_saker_apple_impl_plist_lib_Plist_getFormat(JNIEnv *env, jclass clazz, jlong ptr) {
+	PlistImpl& plist = *reinterpret_cast<PlistImpl*>(ptr);
+	switch (plist.format) {
+		case kCFPropertyListXMLFormat_v1_0: {
+			return Java_const_saker_apple_impl_plist_lib_Plist_FORMAT_XML;
+		}
+		case kCFPropertyListBinaryFormat_v1_0: {
+			return Java_const_saker_apple_impl_plist_lib_Plist_FORMAT_BINARY;
+		}
+		default: {
+			//kCFPropertyListOpenStepFormat? or something
+			javaException(env, "java/lang/UnsupportedOperationException", "Failed to determine plist format.");
+			return 0;
+		}
+	}
 }
 
 JNIEXPORT void JNICALL Java_saker_apple_impl_plist_lib_Plist_release(

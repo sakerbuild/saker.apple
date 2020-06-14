@@ -3,6 +3,7 @@ package saker.apple.main.plist;
 import java.util.Collection;
 import java.util.Map;
 
+import saker.apple.impl.plist.PlistValueOption;
 import saker.sdk.support.api.SDKPathReference;
 import saker.sdk.support.api.SDKPropertyReference;
 
@@ -74,6 +75,15 @@ public abstract class PlistValueTaskOption {
 		};
 	}
 
+	public static PlistValueTaskOption valueOf(PlistValueOption input) {
+		return new PlistValueTaskOption() {
+			@Override
+			public void accept(Visitor visitor) {
+				visitor.visit(input);
+			}
+		};
+	}
+
 	public static PlistValueTaskOption valueOf(@SuppressWarnings("rawtypes") Collection input) {
 		return new PlistValueTaskOption() {
 			@Override
@@ -108,5 +118,7 @@ public abstract class PlistValueTaskOption {
 		public void visit(Collection<?> value);
 
 		public void visit(Map<?, ?> value);
+
+		public void visit(PlistValueOption value);
 	}
 }

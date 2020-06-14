@@ -8,6 +8,10 @@ public interface FrontendXcodeSDKDescriptionFunctions extends SDKDescription {
 		return XcodeExecutableSDKDescription.create(this, SakerAppleUtils.XCODE_EXECUTABLE_NAME_STRIP);
 	}
 
+	public default SDKDescription getLipoSDK() {
+		return XcodeExecutableSDKDescription.create(this, SakerAppleUtils.XCODE_EXECUTABLE_NAME_LIPO);
+	}
+
 	public default SDKDescription getClangSDK() {
 		return XcodeExecutableSDKDescription.create(this, SakerAppleUtils.XCODE_EXECUTABLE_NAME_CLANG);
 	}

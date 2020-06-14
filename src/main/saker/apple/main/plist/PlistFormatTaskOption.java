@@ -3,7 +3,10 @@ package saker.apple.main.plist;
 import java.util.Locale;
 
 public class PlistFormatTaskOption {
-	public static final PlistFormatTaskOption INSTANCE_BINARY1 = new PlistFormatTaskOption("binary1");
+	public static final String FORMAT_XML1 = "xml1";
+	public static final String FORMAT_BINARY1 = "binary1";
+
+	public static final PlistFormatTaskOption INSTANCE_BINARY1 = new PlistFormatTaskOption(FORMAT_BINARY1);
 
 	private String format;
 
@@ -18,12 +21,12 @@ public class PlistFormatTaskOption {
 	public static PlistFormatTaskOption valueOf(String input) {
 		switch (input.toLowerCase(Locale.ENGLISH)) {
 			case "binary":
-			case "binary1": {
-				return new PlistFormatTaskOption("binary1");
+			case FORMAT_BINARY1: {
+				return new PlistFormatTaskOption(FORMAT_BINARY1);
 			}
 			case "xml":
-			case "xml1": {
-				return new PlistFormatTaskOption("xml1");
+			case FORMAT_XML1: {
+				return new PlistFormatTaskOption(FORMAT_XML1);
 			}
 			default: {
 				throw new IllegalArgumentException("Unrecognized plist format: " + input);

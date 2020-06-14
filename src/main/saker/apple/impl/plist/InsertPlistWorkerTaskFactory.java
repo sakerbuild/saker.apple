@@ -73,6 +73,8 @@ public class InsertPlistWorkerTaskFactory
 		this.sdkDescriptions = sdkdescriptions;
 	}
 
+	//TODO make cluster dispatchable
+
 	@Override
 	public int getRequestedComputationTokenCount() {
 		return 1;
@@ -93,6 +95,44 @@ public class InsertPlistWorkerTaskFactory
 				throw new IllegalArgumentException("Unsupported format: " + format);
 			}
 		}
+	}
+
+	public static Plist getPlistReportDependencyForFileLocation(TaskContext taskcontext, FileLocation input)
+			throws IOException {
+		@SuppressWarnings({ "unchecked", "rawtypes" })
+		IOSupplier<? extends Plist>[] plistsupplier = new IOSupplier[] { null };
+		input.accept(new FileLocationVisitor() {
+			@Override
+			public void visit(LocalFileLocation loc) {
+				SakerPath path = loc.getLocalPath();
+				ContentDescriptor cd = taskcontext.getTaskUtilities().getReportExecutionDependency(
+						SakerStandardUtils.createLocalFileContentDescriptorExecutionProperty(path, UUID.randomUUID()));
+				if (cd == null || cd instanceof DirectoryContentDescriptor) {
+					throw ObjectUtils.sneakyThrow(new NoSuchFieldError("Not a file: " + path));
+				}
+				plistsupplier[0] = () -> {
+					try (InputStream is = LocalFileProvider.getInstance().openInputStream(path)) {
+						return Plist.readFrom(is);
+					}
+				};
+			}
+
+			@Override
+			public void visit(ExecutionFileLocation loc) {
+				SakerPath path = loc.getPath();
+				SakerFile f = taskcontext.getTaskUtilities().resolveFileAtPath(path);
+				if (f == null) {
+					throw ObjectUtils.sneakyThrow(new NoSuchFieldError("Not a file: " + path));
+				}
+				taskcontext.reportInputFileDependency(null, path, f.getContentDescriptor());
+				plistsupplier[0] = () -> {
+					try (InputStream is = f.openInputStream()) {
+						return Plist.readFrom(is);
+					}
+				};
+			}
+		});
+		return plistsupplier[0].get();
 	}
 
 	@Override
@@ -116,49 +156,29 @@ public class InsertPlistWorkerTaskFactory
 		if (input == null) {
 			plistsupplier[0] = Plist::createEmpty;
 		} else {
-			input.accept(new FileLocationVisitor() {
-				@Override
-				public void visit(LocalFileLocation loc) {
-					SakerPath path = loc.getLocalPath();
-					ContentDescriptor cd = taskutils.getReportExecutionDependency(SakerStandardUtils
-							.createLocalFileContentDescriptorExecutionProperty(path, UUID.randomUUID()));
-					if (cd == null || cd instanceof DirectoryContentDescriptor) {
-						throw ObjectUtils.sneakyThrow(new NoSuchFieldError("Not a file: " + path));
-					}
-					plistsupplier[0] = () -> {
-						try (InputStream is = LocalFileProvider.getInstance().openInputStream(path)) {
-							return Plist.readFrom(is);
-						}
-					};
-				}
-
-				@Override
-				public void visit(ExecutionFileLocation loc) {
-					SakerPath path = loc.getPath();
-					SakerFile f = taskutils.resolveFileAtPath(path);
-					if (f == null) {
-						throw ObjectUtils.sneakyThrow(new NoSuchFieldError("Not a file: " + path));
-					}
-					taskcontext.reportInputFileDependency(null, path, f.getContentDescriptor());
-					plistsupplier[0] = () -> {
-						try (InputStream is = f.openInputStream()) {
-							return Plist.readFrom(is);
-						}
-					};
-				}
-			});
+			plistsupplier[0] = () -> getPlistReportDependencyForFileLocation(taskcontext, input);
 		}
 		String outputfilename = relativeoutputpath.getFileName();
 
 		ByteArraySakerFile outfile;
+		int actualformat;
 		try (Plist plist = plistsupplier[0].get()) {
 			for (Entry<String, PlistValueOption> entry : values.entrySet()) {
 				String key = entry.getKey();
-				Object valobj = toObject(entry.getValue(), sdks);
-				plist.set(key, valobj);
+				PlistValueOption valoption = entry.getValue();
+				if (valoption == null) {
+					plist.remove(key);
+				} else {
+					Object valobj = toObject(valoption, sdks);
+					plist.set(key, valobj);
+				}
 			}
-			byte[] serialized = plist.serialize(getPlistFormat());
+			actualformat = getPlistFormat();
+			byte[] serialized = plist.serialize(actualformat);
 			outfile = new ByteArraySakerFile(outputfilename, serialized);
+			if (actualformat == Plist.FORMAT_SAME_AS_INPUT) {
+				actualformat = plist.getFormat();
+			}
 		}
 		outputdir.add(outfile);
 		outfile.synchronize();
@@ -166,7 +186,21 @@ public class InsertPlistWorkerTaskFactory
 		SakerPath outputsakerpath = outfile.getSakerPath();
 		taskcontext.reportOutputFileDependency(null, outputsakerpath, outfile.getContentDescriptor());
 
-		InsertPlistWorkerTaskOutputImpl result = new InsertPlistWorkerTaskOutputImpl(outputsakerpath, format);
+		String strformat;
+		switch (actualformat) {
+			case Plist.FORMAT_BINARY: {
+				strformat = "binary1";
+				break;
+			}
+			case Plist.FORMAT_XML: {
+				strformat = "xml1";
+				break;
+			}
+			default: {
+				throw new UnsupportedOperationException("Unrecognized plist format: " + actualformat);
+			}
+		}
+		InsertPlistWorkerTaskOutputImpl result = new InsertPlistWorkerTaskOutputImpl(outputsakerpath, strformat);
 		taskcontext.reportSelfTaskOutputChangeDetector(new EqualityTaskOutputChangeDetector(result));
 		return result;
 	}

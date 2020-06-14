@@ -83,8 +83,7 @@ public class ConvertPlistWorkerTaskFactory
 		SakerPath relativeoutputpath = taskid.getRelativeOutput();
 		TaskExecutionUtilities taskutils = taskcontext.getTaskUtilities();
 		SakerDirectory outputdir = taskutils.resolveDirectoryAtRelativePathCreate(
-				SakerPathFiles.requireBuildDirectory(taskcontext).getDirectoryCreate(ConvertPlistTaskFactory.TASK_NAME),
-				relativeoutputpath.getParent());
+				SakerPathFiles.requireBuildDirectory(taskcontext), relativeoutputpath.getParent());
 
 		@SuppressWarnings({ "unchecked", "rawtypes" })
 		IOSupplier<? extends InputStream>[] streamsupplier = new IOSupplier[] { null };

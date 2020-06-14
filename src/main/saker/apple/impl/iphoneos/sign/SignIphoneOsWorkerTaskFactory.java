@@ -176,6 +176,7 @@ public class SignIphoneOsWorkerTaskFactory
 		{
 			SakerProcessBuilder pb = SakerProcessBuilder.create();
 			pb.setCommand(ImmutableUtils.asUnmodifiableArrayList("security", "cms", "-D"));
+			//TODO use -i <file> instead of redirected input
 			pb.setStandardInputFile(provisioningprofilepath[0]);
 			pb.setStandardOutputConsumer(securityoutconsumer);
 			pb.setStandardErrorMerge(true);

@@ -49,6 +49,15 @@ public class Plist implements AutoCloseable {
 		return new Plist(createFromBytes(bytes.getArray(), bytes.getOffset(), bytes.getLength()));
 	}
 
+	public int getFormat() {
+		use();
+		try {
+			return getFormat(ptr);
+		} finally {
+			release();
+		}
+	}
+
 	public Object get(String key) {
 		Objects.requireNonNull(key, "key");
 		use();
@@ -122,6 +131,16 @@ public class Plist implements AutoCloseable {
 		}
 	}
 
+	public void remove(String key) {
+		Objects.requireNonNull(key, "key");
+		use();
+		try {
+			removeValue(ptr, key);
+		} finally {
+			release();
+		}
+	}
+
 	/**
 	 * Serializes the plist in the specified format.
 	 * 
@@ -156,6 +175,10 @@ public class Plist implements AutoCloseable {
 	private static native void setObjectKeyValue(long ptr, String key, Object value);
 
 	private static native Object getValue(long ptr, String key);
+
+	private static native void removeValue(long ptr, String key);
+
+	private static native int getFormat(long ptr);
 
 	private void use() throws IllegalStateException {
 		AIFU_useCounter.updateAndGet(this, c -> {

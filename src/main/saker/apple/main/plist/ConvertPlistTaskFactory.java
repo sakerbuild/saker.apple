@@ -45,13 +45,15 @@ public class ConvertPlistTaskFactory extends FrontendTaskFactory<Object> {
 				SakerPath outputpath;
 				if (outputOption != null) {
 					TaskOptionUtils.requireForwardRelativePathWithFileName(outputOption, "Output");
-					outputpath = outputOption;
+					outputpath = SakerPath.valueOf(TASK_NAME).resolve(outputOption);
 				} else {
-					outputpath = SakerPath.valueOf(SakerStandardUtils.getFileLocationFileName(inputfl));
+					outputpath = SakerPath.valueOf(TASK_NAME)
+							.resolve(SakerStandardUtils.getFileLocationFileName(inputfl));
 				}
 
 				ConvertPlistWorkerTaskIdentifier workertaskid = new ConvertPlistWorkerTaskIdentifier(outputpath);
-				ConvertPlistWorkerTaskFactory workertask = new ConvertPlistWorkerTaskFactory(inputfl, formatOption.getFormat());
+				ConvertPlistWorkerTaskFactory workertask = new ConvertPlistWorkerTaskFactory(inputfl,
+						formatOption.getFormat());
 				taskcontext.startTask(workertaskid, workertask, null);
 
 				SimpleStructuredObjectTaskResult result = new SimpleStructuredObjectTaskResult(workertaskid);

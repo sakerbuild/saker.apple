@@ -1,5 +1,10 @@
 package saker.apple.api;
 
+import saker.apple.impl.sdk.VersionsApplePlatformSDKDescription;
+import saker.apple.impl.sdk.VersionsDeveloperMacOsSDKDescription;
+import saker.apple.impl.sdk.VersionsXcodeSDKDescription;
+import saker.sdk.support.api.SDKDescription;
+
 public class SakerAppleUtils {
 
 	public static final String SDK_NAME_XCODE = "Xcode";
@@ -14,6 +19,7 @@ public class SakerAppleUtils {
 	public static final String SDK_NAME_PLATFORM_WATCHSIMULATOR = "WatchSimulator";
 
 	public static final String SDK_NAME_STRIP = "Strip";
+	public static final String SDK_NAME_LIPO = "Lipo";
 
 	/**
 	 * E.g.
@@ -29,6 +35,10 @@ public class SakerAppleUtils {
 	 * E.g. <code>macosx10.12</code>
 	 */
 	public static final String SDK_APPLEPLATFORM_PROPERTY_NAME = "name";
+	/**
+	 * E.g. <code>macosx</code>
+	 */
+	public static final String SDK_APPLEPLATFORM_PROPERTY_PLATFORM_NAME = "platform.name";
 	/**
 	 * E.g. <code>10.12</code>
 	 */
@@ -98,4 +108,41 @@ public class SakerAppleUtils {
 	private SakerAppleUtils() {
 		throw new UnsupportedOperationException();
 	}
+
+	public static SDKDescription getDefaultXcodeSDKDescription() {
+		return VersionsXcodeSDKDescription.create(null);
+	}
+
+	public static SDKDescription getDefaultDeveloperMacOsSDKDescription() {
+		return VersionsDeveloperMacOsSDKDescription.create(null);
+	}
+
+	public static SDKDescription getDefaultIPhoneOsSDKDescription() {
+		return VersionsApplePlatformSDKDescription.create("iphoneos", null);
+	}
+
+	public static SDKDescription getDefaultIPhoneSimulatorSDKDescription() {
+		return VersionsApplePlatformSDKDescription.create("iphonesimulator", null);
+	}
+
+	public static SDKDescription getDefaultMacOsSDKDescription() {
+		return VersionsApplePlatformSDKDescription.create("macosx", null);
+	}
+
+	public static SDKDescription getDefaultAppleTvOsSDKDescription() {
+		return VersionsApplePlatformSDKDescription.create("appletvos", null);
+	}
+
+	public static SDKDescription getDefaultAppleTvSimulatorSDKDescription() {
+		return VersionsApplePlatformSDKDescription.create("appletvsimulator", null);
+	}
+
+	public static SDKDescription getDefaultWatchOsSDKDescription() {
+		return VersionsApplePlatformSDKDescription.create("watchos", null);
+	}
+
+	public static SDKDescription getDefaultWatchSimulatorSDKDescription() {
+		return VersionsApplePlatformSDKDescription.create("watchsimulator", null);
+	}
+
 }

@@ -56,6 +56,24 @@ public class ApplePlatformSDKReference implements SDKReference, Externalizable {
 			case SakerAppleUtils.SDK_APPLEPLATFORM_PROPERTY_NAME: {
 				return sdkInformation.getName();
 			}
+			case SakerAppleUtils.SDK_APPLEPLATFORM_PROPERTY_PLATFORM_NAME: {
+				String n = sdkInformation.getName();
+				if (n == null) {
+					return null;
+				}
+				int numidx = -1;
+				for (int i = 0, len = n.length(); i < len; i++) {
+					char c = n.charAt(i);
+					if (c >= '0' && c <= '9') {
+						numidx = i;
+						break;
+					}
+				}
+				if (numidx < 0) {
+					return n;
+				}
+				return n.substring(0, numidx);
+			}
 			case SakerAppleUtils.SDK_APPLEPLATFORM_PROPERTY_SDK_VERSION: {
 				return sdkInformation.getSDKVersion();
 			}

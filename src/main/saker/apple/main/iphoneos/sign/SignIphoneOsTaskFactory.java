@@ -72,7 +72,7 @@ public class SignIphoneOsTaskFactory extends FrontendTaskFactory<Object> {
 					TaskOptionUtils.requireForwardRelativePathWithFileName(outputOption, "Output");
 					outputpath = SakerPath.valueOf(TASK_NAME).resolve(outputOption);
 				} else {
-					outputpath = inferDefaultOutputPath(taskcontext, appdir);
+					outputpath = SakerPath.valueOf(TASK_NAME).resolve(inferDefaultOutputPath(taskcontext, appdir));
 				}
 				String outputpathfilename = outputpath.getFileName();
 				if (StringUtils.endsWithIgnoreCase(outputpathfilename, ".xcent")
@@ -99,15 +99,15 @@ public class SignIphoneOsTaskFactory extends FrontendTaskFactory<Object> {
 			SakerPath relative = builddirpath.relativize(appdir);
 			if (relative.getNameCount() >= 2) {
 				if (CreateIphoneOsBundleTaskFactory.TASK_NAME.equals(relative.getName(0))) {
-					return SakerPath.valueOf(TASK_NAME).resolve(relative.subPath(1));
+					return relative.subPath(1);
 				}
 			}
-			return SakerPath.valueOf(TASK_NAME).resolve(relative);
+			return relative;
 		}
 		if (appdir.getFileName() != null) {
-			return SakerPath.valueOf(TASK_NAME).resolve(appdir.getFileName());
+			return SakerPath.valueOf(appdir.getFileName());
 		}
-		return SakerPath.valueOf(TASK_NAME).resolve("default.app");
+		return SakerPath.valueOf("default.app");
 	}
 
 	public static class IphoneOsApplicationTaskOption {

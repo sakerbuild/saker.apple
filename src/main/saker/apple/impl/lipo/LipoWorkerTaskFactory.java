@@ -1,21 +1,25 @@
-package saker.apple.impl.strip;
+package saker.apple.impl.lipo;
 
 import java.io.Externalizable;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.NavigableMap;
 import java.util.UUID;
 
 import saker.apple.api.SakerAppleUtils;
-import saker.apple.api.strip.StripWorkerTaskOutput;
-import saker.apple.main.strip.StripTaskFactory;
+import saker.apple.api.lipo.LipoWorkerTaskOutput;
+import saker.apple.main.lipo.LipoTaskFactory;
 import saker.build.file.DirectoryVisitPredicate;
 import saker.build.file.SakerDirectory;
 import saker.build.file.SakerFile;
 import saker.build.file.content.ContentDescriptor;
+import saker.build.file.content.DirectoryContentDescriptor;
 import saker.build.file.path.ProviderHolderPathKey;
 import saker.build.file.path.SakerPath;
 import saker.build.file.provider.LocalFileProvider;
@@ -44,24 +48,22 @@ import saker.std.api.file.location.FileLocationVisitor;
 import saker.std.api.file.location.LocalFileLocation;
 import saker.std.api.util.SakerStandardUtils;
 
-public class StripWorkerTaskFactory
-		implements TaskFactory<StripWorkerTaskOutput>, Task<StripWorkerTaskOutput>, Externalizable {
+public class LipoWorkerTaskFactory
+		implements TaskFactory<LipoWorkerTaskOutput>, Task<LipoWorkerTaskOutput>, Externalizable {
 	private static final long serialVersionUID = 1L;
 
-	//TODO the code in this class is very similar to the Android NDK strip worker task. common code could be exported to the standard package
-
-	private FileLocation inputFile;
+	private List<FileLocation> inputs;
 
 	private NavigableMap<String, ? extends SDKDescription> sdkDescriptions;
 
 	/**
 	 * For {@link Externalizable}.
 	 */
-	public StripWorkerTaskFactory() {
+	public LipoWorkerTaskFactory() {
 	}
 
-	public StripWorkerTaskFactory(FileLocation inputFile) {
-		this.inputFile = inputFile;
+	public LipoWorkerTaskFactory(Collection<? extends FileLocation> inputs) {
+		this.inputs = ImmutableUtils.makeImmutableList(inputs);
 	}
 
 	public void setSDKDescriptions(NavigableMap<String, ? extends SDKDescription> sdkdescriptions) {
@@ -75,63 +77,71 @@ public class StripWorkerTaskFactory
 	}
 
 	@Override
-	public StripWorkerTaskOutput run(TaskContext taskcontext) throws Exception {
-		StripWorkerTaskIdentifier taskid = (StripWorkerTaskIdentifier) taskcontext.getTaskId();
+	public LipoWorkerTaskOutput run(TaskContext taskcontext) throws Exception {
+		LipoWorkerTaskIdentifier taskid = (LipoWorkerTaskIdentifier) taskcontext.getTaskId();
 		SakerPath outputpath = taskid.getOutputPath();
 		String fname = outputpath.getFileName();
 		if (saker.build.meta.Versions.VERSION_FULL_COMPOUND >= 8_006) {
 			BuildTrace.classifyTask(BuildTrace.CLASSIFICATION_WORKER);
-			BuildTrace.setDisplayInformation("strip:" + fname, StripTaskFactory.TASK_NAME + ":" + fname);
+			BuildTrace.setDisplayInformation("lipo:" + fname, LipoTaskFactory.TASK_NAME + ":" + fname);
 		}
-		taskcontext.setStandardOutDisplayIdentifier("strip:" + fname);
+		taskcontext.setStandardOutDisplayIdentifier("lipo:" + fname);
 
-		Path[] inputfilelocalpath = { null };
-		inputFile.accept(new FileLocationVisitor() {
-			@Override
-			public void visit(ExecutionFileLocation loc) {
-				SakerPath inputpath = loc.getPath();
-				MirroredFileContents mirroredinputfile;
-				try {
-					mirroredinputfile = taskcontext.getTaskUtilities().mirrorFileAtPathContents(inputpath);
-				} catch (IOException e) {
-					taskcontext.reportInputFileDependency(null, inputpath, CommonTaskContentDescriptors.IS_NOT_FILE);
-					FileNotFoundException fnfe = new FileNotFoundException(loc.toString());
-					fnfe.initCause(e);
-					ObjectUtils.sneakyThrow(fnfe);
-					return;
+		List<String> lipocommand = new ArrayList<>();
+
+		NavigableMap<String, SDKReference> sdkrefs = SDKSupportUtils.resolveSDKReferences(taskcontext,
+				this.sdkDescriptions);
+		SDKReference liposdk = SDKSupportUtils.requireSDK(sdkrefs, SakerAppleUtils.SDK_NAME_LIPO);
+		SakerPath exepath = liposdk.getPath(SakerAppleUtils.SDK_XCODE_EXECUTABLE_PATH_EXECUTABLE);
+		if (exepath == null) {
+			throw new SDKPathNotFoundException("lipo executable SDK path not found in: " + liposdk);
+		}
+		lipocommand.add(exepath.toString());
+		lipocommand.add("-create");
+
+		for (FileLocation inputFile : inputs) {
+			inputFile.accept(new FileLocationVisitor() {
+				@Override
+				public void visit(ExecutionFileLocation loc) {
+					SakerPath inputpath = loc.getPath();
+					MirroredFileContents mirroredinputfile;
+					try {
+						mirroredinputfile = taskcontext.getTaskUtilities().mirrorFileAtPathContents(inputpath);
+					} catch (IOException e) {
+						taskcontext.reportInputFileDependency(null, inputpath,
+								CommonTaskContentDescriptors.IS_NOT_FILE);
+						NoSuchFileException nsfe = new NoSuchFileException(loc.toString());
+						nsfe.initCause(e);
+						throw ObjectUtils.sneakyThrow(nsfe);
+					}
+					taskcontext.reportInputFileDependency(null, inputpath, mirroredinputfile.getContents());
+					lipocommand.add(mirroredinputfile.getPath().toString());
 				}
-				taskcontext.reportInputFileDependency(null, inputpath, mirroredinputfile.getContents());
-				inputfilelocalpath[0] = mirroredinputfile.getPath();
-			}
 
-			@Override
-			public void visit(LocalFileLocation loc) {
-				SakerPath inputpath = loc.getLocalPath();
-				ExecutionProperty<? extends ContentDescriptor> envprop = SakerStandardUtils
-						.createLocalFileContentDescriptorExecutionProperty(inputpath, UUID.randomUUID());
-				inputfilelocalpath[0] = LocalFileProvider.toRealPath(inputpath);
-				taskcontext.getTaskUtilities().getReportExecutionDependency(envprop);
-			}
-		});
+				@Override
+				public void visit(LocalFileLocation loc) {
+					SakerPath inputpath = loc.getLocalPath();
+					ExecutionProperty<? extends ContentDescriptor> envprop = SakerStandardUtils
+							.createLocalFileContentDescriptorExecutionProperty(inputpath, UUID.randomUUID());
+					lipocommand.add(inputpath.toString());
+					ContentDescriptor cd = taskcontext.getTaskUtilities().getReportExecutionDependency(envprop);
+					if (cd == null || cd instanceof DirectoryContentDescriptor) {
+						throw ObjectUtils.sneakyThrow(new NoSuchFileException(inputpath + " is not a file."));
+					}
+				}
+			});
+		}
 
 		SakerDirectory outputdir = taskcontext.getTaskUtilities().resolveDirectoryAtRelativePathCreate(
 				SakerPathFiles.requireBuildDirectory(taskcontext), outputpath.getParent());
 
-		NavigableMap<String, SDKReference> sdkrefs = SDKSupportUtils.resolveSDKReferences(taskcontext,
-				this.sdkDescriptions);
-		SDKReference stripsdk = SDKSupportUtils.requireSDK(sdkrefs, SakerAppleUtils.SDK_NAME_STRIP);
-		SakerPath exepath = stripsdk.getPath(SakerAppleUtils.SDK_XCODE_EXECUTABLE_PATH_EXECUTABLE);
-		if (exepath == null) {
-			throw new SDKPathNotFoundException("strip executable SDK path not found in: " + stripsdk);
-		}
-
 		Path outputfilelocalpath = taskcontext.mirror(outputdir, DirectoryVisitPredicate.synchronizeNothing())
 				.resolve(fname);
+		lipocommand.add("-output");
+		lipocommand.add(outputfilelocalpath.toString());
 
 		SakerProcessBuilder pb = SakerProcessBuilder.create();
-		//TODO other flags
-		pb.setCommand(ImmutableUtils.asUnmodifiableArrayList(exepath.toString(), "-o", outputfilelocalpath.toString(),
-				inputfilelocalpath[0].toString()));
+		pb.setCommand(lipocommand);
 		pb.setStandardErrorMerge(true);
 		CollectingProcessIOConsumer outconsumer = new CollectingProcessIOConsumer();
 		pb.setStandardOutputConsumer(outconsumer);
@@ -139,7 +149,7 @@ public class StripWorkerTaskFactory
 			proc.processIO();
 			int ec = proc.waitFor();
 			if (ec != 0) {
-				throw new IOException("strip failed: " + ec);
+				throw new IOException("lipo failed: " + ec);
 			}
 		} finally {
 			taskcontext.getStandardOut().write(outconsumer.getByteArrayRegion());
@@ -159,24 +169,24 @@ public class StripWorkerTaskFactory
 		SakerPath outputabsolutepath = outputfile.getSakerPath();
 		taskcontext.reportOutputFileDependency(null, outputabsolutepath, outputfile.getContentDescriptor());
 
-		return new StripTaskOutputImpl(outputabsolutepath);
+		return new LipoTaskOutputImpl(outputabsolutepath);
 	}
 
 	@Override
-	public Task<? extends StripWorkerTaskOutput> createTask(ExecutionContext executioncontext) {
+	public Task<? extends LipoWorkerTaskOutput> createTask(ExecutionContext executioncontext) {
 		return this;
 	}
 
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
-		out.writeObject(inputFile);
+		SerialUtils.writeExternalCollection(out, inputs);
 
 		SerialUtils.writeExternalMap(out, sdkDescriptions);
 	}
 
 	@Override
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-		inputFile = (FileLocation) in.readObject();
+		inputs = SerialUtils.readExternalImmutableList(in);
 
 		sdkDescriptions = SerialUtils.readExternalSortedImmutableNavigableMap(in,
 				SDKSupportUtils.getSDKNameComparator());
@@ -186,7 +196,7 @@ public class StripWorkerTaskFactory
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((inputFile == null) ? 0 : inputFile.hashCode());
+		result = prime * result + ((inputs == null) ? 0 : inputs.hashCode());
 		result = prime * result + ((sdkDescriptions == null) ? 0 : sdkDescriptions.hashCode());
 		return result;
 	}
@@ -199,11 +209,11 @@ public class StripWorkerTaskFactory
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		StripWorkerTaskFactory other = (StripWorkerTaskFactory) obj;
-		if (inputFile == null) {
-			if (other.inputFile != null)
+		LipoWorkerTaskFactory other = (LipoWorkerTaskFactory) obj;
+		if (inputs == null) {
+			if (other.inputs != null)
 				return false;
-		} else if (!inputFile.equals(other.inputFile))
+		} else if (!inputs.equals(other.inputs))
 			return false;
 		if (sdkDescriptions == null) {
 			if (other.sdkDescriptions != null)

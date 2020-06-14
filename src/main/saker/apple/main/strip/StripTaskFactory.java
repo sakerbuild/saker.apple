@@ -57,14 +57,14 @@ public class StripTaskFactory extends FrontendTaskFactory<Object> {
 				SakerPath outputpath;
 				if (outputOption != null) {
 					TaskOptionUtils.requireForwardRelativePathWithFileName(outputOption, "Output");
-					outputpath = outputOption;
+					outputpath = SakerPath.valueOf(TASK_NAME).resolve(outputOption);
 				} else {
-					outputpath = SakerPath.valueOf(SakerStandardUtils.getFileLocationFileName(inputfilelocation));
+					outputpath = SakerPath.valueOf(TASK_NAME)
+							.resolve(SakerStandardUtils.getFileLocationFileName(inputfilelocation));
 				}
 
 				StripWorkerTaskIdentifier workertaskid = new StripWorkerTaskIdentifier(outputpath);
-				StripWorkerTaskFactory workertask = new StripWorkerTaskFactory();
-				workertask.setInputFile(inputfilelocation);
+				StripWorkerTaskFactory workertask = new StripWorkerTaskFactory(inputfilelocation);
 				workertask.setSDKDescriptions(sdkdescriptions);
 
 				taskcontext.startTask(workertaskid, workertask, null);

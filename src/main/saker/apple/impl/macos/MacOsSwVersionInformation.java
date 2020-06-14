@@ -35,7 +35,7 @@ public class MacOsSwVersionInformation implements Externalizable {
 //		ProductName:	Mac OS X
 //		ProductVersion:	10.11.6
 //		BuildVersion:	15G22010 
-		
+
 		SakerProcessBuilder pb = SakerProcessBuilder.create();
 		List<String> command = ImmutableUtils.asUnmodifiableArrayList("sw_vers");
 		pb.setCommand(command);
@@ -70,9 +70,9 @@ public class MacOsSwVersionInformation implements Externalizable {
 				if (line.startsWith("ProductName:")) {
 					result.productName = line.substring(12).trim();
 				} else if (line.startsWith("ProductVersion:")) {
-					result.productName = line.substring(15).trim();
+					result.productVersion = line.substring(15).trim();
 				} else if (line.startsWith("BuildVersion:")) {
-					result.productName = line.substring(13).trim();
+					result.buildVersion = line.substring(13).trim();
 				}
 			}
 		}

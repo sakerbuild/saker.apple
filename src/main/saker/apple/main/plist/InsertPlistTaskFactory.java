@@ -72,7 +72,7 @@ public class InsertPlistTaskFactory extends FrontendTaskFactory<Object> {
 				SakerPath outputpath;
 				if (outputOption != null) {
 					TaskOptionUtils.requireForwardRelativePathWithFileName(outputOption, "Output");
-					outputpath = outputOption;
+					outputpath = SakerPath.valueOf(TASK_NAME).resolve(outputOption);
 				} else {
 					if (inputfl == null) {
 						outputpath = SakerPath.valueOf(TASK_NAME + "/default.plist");
@@ -144,10 +144,20 @@ public class InsertPlistTaskFactory extends FrontendTaskFactory<Object> {
 						}
 						val[0] = PlistValueOption.create(valsmap);
 					}
+
+					@Override
+					public void visit(PlistValueOption value) {
+						val[0] = value;
+					}
 				};
 				for (Entry<String, PlistValueTaskOption> entry : valuesopt.entrySet()) {
 					String key = entry.getKey();
-					entry.getValue().accept(plisttaskoptionvisitor);
+					PlistValueTaskOption valtaskopt = entry.getValue();
+					//keep nulls as they signal removal
+					val[0] = null;
+					if (valtaskopt != null) {
+						valtaskopt.accept(plisttaskoptionvisitor);
+					}
 					values.put(key, val[0]);
 				}
 
