@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -20,6 +21,7 @@ import saker.apple.impl.sdk.VersionsXcodeSDKDescription;
 import saker.apple.main.TaskDocs.DocAppleArchitecture;
 import saker.apple.main.TaskDocs.DocAppleOptionsPreset;
 import saker.apple.main.TaskDocs.DocApplePlatformOption;
+import saker.apple.main.TaskDocs.DocDeviceFamilyOption;
 import saker.build.runtime.execution.ExecutionContext;
 import saker.build.runtime.execution.SakerLog;
 import saker.build.task.ParameterizableTask;
@@ -105,10 +107,30 @@ import saker.sdk.support.main.option.SDKDescriptionTaskOption;
 		info = @NestInformation("Specifies the SDKs (Software Development Kits) that are part of the configuration.\n"
 				+ "The SDKs will be passed to the clang task, and also available with the SDKs field of the result.\n"
 				+ "Appropriate SDKs for the given Platform, clang, and developer macOS will be added by default."))
+@NestParameterInformation(value = "DeviceFamily",
+		type = @NestTypeUsage(value = Collection.class, elementTypes = DocDeviceFamilyOption.class),
+		info = @NestInformation("Specifies the device families that the app is expected to run on.\n"
+				+ "This parameter will cause an appropriate UIDeviceFamily value be inserted in the Info.plist "
+				+ "file of your application.\n"
+				+ "By default, the value of this is inferred based on the target Platform.\n"
+				+ "You can set this parameter to null to disable the default values.\n"
+				+ "Generally this parameter is used to specify iPad as well as iPhone for the device family "
+				+ "when targetting the iPhoneOS platform."))
 public class AppleOptionsPresetTaskFactory extends FrontendTaskFactory<Object> {
 	private static final long serialVersionUID = 1L;
 
 	public static final String TASK_NAME = "saker.apple.preset";
+
+	public static final int UIDEVICEFAMILY_IPHONE = 1;
+	public static final int UIDEVICEFAMILY_IPAD = 2;
+	public static final int UIDEVICEFAMILY_TVOS = 3;
+	public static final int UIDEVICEFAMILY_WATCHOS = 4;
+	private static final PlistValueOption PLIST_VALUE_UIDEVICEFAMILY_IPHONE = PlistValueOption
+			.create(ImmutableUtils.asUnmodifiableArrayList(PlistValueOption.create(UIDEVICEFAMILY_IPHONE)));
+	private static final PlistValueOption PLIST_VALUE_UIDEVICEFAMILY_WATCHOS = PlistValueOption
+			.create(ImmutableUtils.asUnmodifiableArrayList(PlistValueOption.create(UIDEVICEFAMILY_WATCHOS)));
+	private static final PlistValueOption PLIST_VALUE_UIDEVICEFAMILY_TVOS = PlistValueOption
+			.create(ImmutableUtils.asUnmodifiableArrayList(PlistValueOption.create(UIDEVICEFAMILY_TVOS)));
 
 	public static final Set<String> KNOWN_ARCHITECTURES = ImmutableUtils.makeImmutableNavigableSet(
 			new String[] { "x86_64", "armv7", "arm64", "arm64e", "i386", "armv7k", "armv7s", "arm64_32" });
@@ -145,6 +167,9 @@ public class AppleOptionsPresetTaskFactory extends FrontendTaskFactory<Object> {
 
 			@SakerInput(value = { "SDKs" })
 			public Map<String, SDKDescriptionTaskOption> sdksOption;
+
+			@SakerInput(value = { "DeviceFamily" })
+			public Optional<Collection<String>> uiDeviceFamilyOption = null;
 
 			@Override
 			public Object run(TaskContext taskcontext) throws Exception {
@@ -221,6 +246,7 @@ public class AppleOptionsPresetTaskFactory extends FrontendTaskFactory<Object> {
 								infoplistvalues.put("MinimumOSVersion",
 										PlistValueOption.create(platformVersionMinOption));
 							}
+							addUIDeviceFamilyValues(infoplistvalues, PLIST_VALUE_UIDEVICEFAMILY_IPHONE);
 							break;
 						}
 						case "iphonesimulator": {
@@ -241,6 +267,7 @@ public class AppleOptionsPresetTaskFactory extends FrontendTaskFactory<Object> {
 								infoplistvalues.put("MinimumOSVersion",
 										PlistValueOption.create(platformVersionMinOption));
 							}
+							addUIDeviceFamilyValues(infoplistvalues, PLIST_VALUE_UIDEVICEFAMILY_IPHONE);
 							break;
 						}
 						case "macos":
@@ -283,6 +310,7 @@ public class AppleOptionsPresetTaskFactory extends FrontendTaskFactory<Object> {
 								infoplistvalues.put("MinimumOSVersion",
 										PlistValueOption.create(platformVersionMinOption));
 							}
+							addUIDeviceFamilyValues(infoplistvalues, PLIST_VALUE_UIDEVICEFAMILY_TVOS);
 							break;
 						}
 						case "appletvsimulator": {
@@ -303,6 +331,7 @@ public class AppleOptionsPresetTaskFactory extends FrontendTaskFactory<Object> {
 								infoplistvalues.put("MinimumOSVersion",
 										PlistValueOption.create(platformVersionMinOption));
 							}
+							addUIDeviceFamilyValues(infoplistvalues, PLIST_VALUE_UIDEVICEFAMILY_TVOS);
 							break;
 						}
 						case "watchos": {
@@ -323,6 +352,7 @@ public class AppleOptionsPresetTaskFactory extends FrontendTaskFactory<Object> {
 								infoplistvalues.put("MinimumOSVersion",
 										PlistValueOption.create(platformVersionMinOption));
 							}
+							addUIDeviceFamilyValues(infoplistvalues, PLIST_VALUE_UIDEVICEFAMILY_WATCHOS);
 							break;
 						}
 						case "watchsimulator": {
@@ -343,6 +373,7 @@ public class AppleOptionsPresetTaskFactory extends FrontendTaskFactory<Object> {
 								infoplistvalues.put("MinimumOSVersion",
 										PlistValueOption.create(platformVersionMinOption));
 							}
+							addUIDeviceFamilyValues(infoplistvalues, PLIST_VALUE_UIDEVICEFAMILY_WATCHOS);
 							break;
 						}
 						default: {
@@ -466,6 +497,22 @@ public class AppleOptionsPresetTaskFactory extends FrontendTaskFactory<Object> {
 				return result;
 			}
 
+			private void addUIDeviceFamilyValues(NavigableMap<String, PlistValueOption> infoplistvalues,
+					PlistValueOption defaultuidevidefamily) {
+				if (uiDeviceFamilyOption == null) {
+					infoplistvalues.put("UIDeviceFamily", defaultuidevidefamily);
+				} else {
+					Collection<String> familyoptions = uiDeviceFamilyOption.orElse(null);
+					if (familyoptions != null) {
+						ArrayList<PlistValueOption> family = new ArrayList<>();
+						for (String name : familyoptions) {
+							family.add(PlistValueOption.create(toDeviceFamilyInteger(name)));
+						}
+						infoplistvalues.put("UIDeviceFamily", PlistValueOption.create(family));
+					}
+				}
+			}
+
 		};
 	}
 
@@ -538,6 +585,27 @@ public class AppleOptionsPresetTaskFactory extends FrontendTaskFactory<Object> {
 			}
 			default: {
 				return null;
+			}
+		}
+	}
+
+	protected static int toDeviceFamilyInteger(String name) {
+		Objects.requireNonNull(name, "device family name");
+		switch (name.toLowerCase(Locale.ENGLISH)) {
+			case "iphone": {
+				return UIDEVICEFAMILY_IPHONE;
+			}
+			case "ipad": {
+				return UIDEVICEFAMILY_IPAD;
+			}
+			case "tvos": {
+				return UIDEVICEFAMILY_TVOS;
+			}
+			case "watchos": {
+				return UIDEVICEFAMILY_WATCHOS;
+			}
+			default: {
+				throw new IllegalArgumentException("Unrecognized device family: " + name);
 			}
 		}
 	}

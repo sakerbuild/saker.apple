@@ -53,8 +53,12 @@ import saker.std.main.file.utils.TaskOptionUtils;
 		required = true,
 		info = @NestInformation("Specifies the provisioning profile that should be embedded in the application.\n"
 				+ "The provisioning profile specifies the entitlements of the application.\n"
-				+ "The specified provisioning profile will be part of the application contents with the embedded.mobileprovision file name.\n"
-				+ "The entitlements of the profile will be extracted and passed as the --entitlements option for the codesign tool."))
+				+ "The specified provisioning profile will be part of the application "
+				+ "contents with the embedded.mobileprovision file name.\n"
+				+ "The entitlements of the profile will be extracted and passed as the "
+				+ "--entitlements option for the codesign tool.\n"
+				+ "The provisioning profiles managed by Xcode usually reside in the "
+				+ "/Users/<YOUR_USERNAME>/Library/MobileDevice/Provisioning Profiles/ directory."))
 @NestParameterInformation(value = "Output",
 		type = @NestTypeUsage(SakerPath.class),
 		info = @NestInformation("A forward relative output path that specifies the output location of the signed application contents.\n"

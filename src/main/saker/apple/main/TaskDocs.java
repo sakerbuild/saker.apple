@@ -152,6 +152,17 @@ public class TaskDocs {
 			type = @NestTypeUsage(SakerPath.class),
 			info = @NestInformation("The path of the signed application directory."))
 	public static class DocSignIphoneOsWorkerTaskOutput {
+	}
 
+	@NestTypeInformation(qualifiedName = "DeviceFamily",
+			enumValues = {
+
+					@NestFieldInformation(value = "iPhone", info = @NestInformation("The iPhone device family.")),
+					@NestFieldInformation(value = "iPad", info = @NestInformation("The iPad device family.")),
+					@NestFieldInformation(value = "tvOS", info = @NestInformation("The tvOS device family.")),
+					@NestFieldInformation(value = "watchOS", info = @NestInformation("The watchOS device family.")),
+
+			})
+	public static class DocDeviceFamilyOption {
 	}
 }
