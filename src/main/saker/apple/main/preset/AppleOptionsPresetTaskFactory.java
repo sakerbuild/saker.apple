@@ -114,7 +114,7 @@ import saker.sdk.support.main.option.SDKDescriptionTaskOption;
 				+ "file of your application.\n"
 				+ "By default, the value of this is inferred based on the target Platform.\n"
 				+ "You can set this parameter to null to disable the default values.\n"
-				+ "Generally this parameter is used to specify iPad as well as iPhone for the device family "
+				+ "Generally this parameter is used to add or set iPad as the device family "
 				+ "when targetting the iPhoneOS platform."))
 public class AppleOptionsPresetTaskFactory extends FrontendTaskFactory<Object> {
 	private static final long serialVersionUID = 1L;

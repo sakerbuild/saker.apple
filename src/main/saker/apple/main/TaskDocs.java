@@ -163,6 +163,7 @@ public class TaskDocs {
 					@NestFieldInformation(value = "watchOS", info = @NestInformation("The watchOS device family.")),
 
 			})
+	@NestInformation("An Apple device family enumeration.")
 	public static class DocDeviceFamilyOption {
 	}
 }

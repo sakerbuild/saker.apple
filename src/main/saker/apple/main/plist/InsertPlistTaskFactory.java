@@ -62,7 +62,8 @@ import saker.std.main.file.utils.TaskOptionUtils;
 				+ "The parameter expects a map with string keys and various values as input. The values "
 				+ "may be lists (array), maps (dictionaries), numbers, booleans and strings.\n"
 				+ "The values may also be SDK paths and property references in which case they will "
-				+ "be resolved against the specified SDKs."))
+				+ "be resolved against the specified SDKs.\n"
+				+ "If a value of the parameter is null, the associated key will be removed."))
 @NestParameterInformation(value = "Output",
 		type = @NestTypeUsage(SakerPath.class),
 		info = @NestInformation("A forward relative output path that specifies the output location of the output plist.\n"
