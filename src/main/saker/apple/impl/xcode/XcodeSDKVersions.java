@@ -52,7 +52,7 @@ public class XcodeSDKVersions implements Externalizable {
 			int ec = proc.waitFor();
 			if (ec != 0) {
 				throw new IOException(
-						"Failed to execute " + StringUtils.toStringJoin(" ", command) + ". Exit code: " + ec);
+						"Failed to execute '" + StringUtils.toStringJoin(" ", command) + "'. Exit code: " + ec);
 			}
 		} catch (InterruptedException e) {
 			throw new IOException("Failed to wait for process.", e);
@@ -125,7 +125,7 @@ public class XcodeSDKVersions implements Externalizable {
 			}
 		}
 		if (ObjectUtils.isNullOrEmpty(xcodeversionnum) || ObjectUtils.isNullOrEmpty(xcodebuildversion)) {
-			throw new IOException("Failed to determine Xcode version.");
+			throw new IOException("Failed to determine Xcode version. (Properties not found in 'xcodebuild -version -sdk' process output.)");
 		}
 		XcodeVersionInformation xcodeversion = new XcodeVersionInformation(xcodeversionnum, xcodebuildversion);
 		return new XcodeSDKVersions(xcodeversion, ImmutableUtils.makeImmutableNavigableMap(sdkinfos));
