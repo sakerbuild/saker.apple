@@ -144,6 +144,7 @@ export(
 				Nest-Bundle-Identifier: "saker.apple-v{ global(VERSION_saker.apple) }",
 				Nest-Bundle-Source: "saker.apple-sources-v{ global(VERSION_saker.apple) }",
 				Nest-ClassPath-Supported-Repository-Versions: "[0.8.6)",
+				Nest-ClassPath-Supported-Build-System-Versions: "[0.8.9)",
 			},
 		},
 	)
@@ -165,6 +166,7 @@ export(
 				Nest-Bundle-Identifier: "saker.apple-api-v{ global(VERSION_saker.apple) }",
 				Nest-Bundle-Source: "saker.apple-sources-v{ global(VERSION_saker.apple) }",
 				Nest-ClassPath-Supported-Repository-Versions: "[0.8.6)",
+				Nest-ClassPath-Supported-Build-System-Versions: "[0.8.9)",
 			},
 		},
 	)
@@ -191,6 +193,7 @@ export(
 				Nest-Bundle-Identifier: "saker.apple-impl-v{ global(VERSION_saker.apple) }",
 				Nest-Bundle-Source: "saker.apple-sources-v{ global(VERSION_saker.apple) }",
 				Nest-ClassPath-Supported-Repository-Versions: "[0.8.6)",
+				Nest-ClassPath-Supported-Build-System-Versions: "[0.8.9)",
 			},
 		},
 	)
@@ -221,4 +224,19 @@ install(
 	in export = export()
 ) {
 	nest.local.install($export[bundlepaths])
+}
+
+upload(
+	in export = export()
+) {
+	include(Path: secret/secrets.build)
+	nest.server.upload(
+		Bundles: $export[bundlepaths],
+		APIKey: global(saker.apple.UPLOAD_API_KEY),
+		APISecret: global(saker.apple.UPLOAD_API_SECRET),
+		Overwrite: true,
+	)
+}
+upload_local() {
+	upload(export: export_local()[export])
 }
