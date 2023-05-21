@@ -1,6 +1,6 @@
 # saker.apple
 
-![Build status](https://img.shields.io/azure-devops/build/sakerbuild/a2dda9d2-f488-4613-a055-46ea65d7656f/26/master)
+[![Build status](https://img.shields.io/azure-devops/build/sakerbuild/a2dda9d2-f488-4613-a055-46ea65d7656f/26/master)](https://dev.azure.com/sakerbuild/saker.apple/_build) (https://mirror.nest.saker.build/badges/saker.apple/version.svg)](https://nest.saker.build/package/saker.apple "saker.apple | saker.nest")
 
 Tooling and development support for Apple products using the saker.build system
 
