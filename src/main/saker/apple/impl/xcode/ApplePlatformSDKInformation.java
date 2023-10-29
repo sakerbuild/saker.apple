@@ -44,8 +44,8 @@ public class ApplePlatformSDKInformation implements Externalizable {
 	 * @return The simple name.
 	 */
 	public String getSimpleName() {
-		StringBuilder sb = new StringBuilder();
 		int len = name.length();
+		StringBuilder sb = new StringBuilder(len);
 		for (int i = 0; i < len; i++) {
 			char c = name.charAt(i);
 			if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
@@ -175,10 +175,7 @@ public class ApplePlatformSDKInformation implements Externalizable {
 		if (getClass() != obj.getClass())
 			return false;
 		ApplePlatformSDKInformation other = (ApplePlatformSDKInformation) obj;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		} else if (!name.equals(other.name))
+		if (this.sdkAttributesEqual(other))
 			return false;
 		if (path == null) {
 			if (other.path != null)
@@ -189,6 +186,19 @@ public class ApplePlatformSDKInformation implements Externalizable {
 			if (other.platformPath != null)
 				return false;
 		} else if (!platformPath.equals(other.platformPath))
+			return false;
+		return true;
+	}
+
+	/**
+	 * Checks that the main attributes of the SDKs equal. These are the versions and other build spcific attributes. The
+	 * paths aren't checked for equality, so the SDK installation paths may differ.
+	 */
+	public boolean sdkAttributesEqual(ApplePlatformSDKInformation other) {
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
 			return false;
 		if (platformVersion == null) {
 			if (other.platformVersion != null)
@@ -242,19 +252,9 @@ public class ApplePlatformSDKInformation implements Externalizable {
 			builder.append(sdkVersion);
 			builder.append(", ");
 		}
-		if (path != null) {
-			builder.append("path=");
-			builder.append(path);
-			builder.append(", ");
-		}
 		if (platformVersion != null) {
 			builder.append("platformVersion=");
 			builder.append(platformVersion);
-			builder.append(", ");
-		}
-		if (platformPath != null) {
-			builder.append("platformPath=");
-			builder.append(platformPath);
 			builder.append(", ");
 		}
 		if (productBuildVersion != null) {
@@ -280,6 +280,16 @@ public class ApplePlatformSDKInformation implements Externalizable {
 		if (productVersion != null) {
 			builder.append("productVersion=");
 			builder.append(productVersion);
+		}
+		if (path != null) {
+			builder.append("path=");
+			builder.append(path);
+			builder.append(", ");
+		}
+		if (platformPath != null) {
+			builder.append("platformPath=");
+			builder.append(platformPath);
+			builder.append(", ");
 		}
 		builder.append("]");
 		return builder.toString();

@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.List;
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -66,11 +67,15 @@ public class XcodeSDKVersions implements Externalizable {
 			throw e;
 		}
 
+		ByteArrayRegion outputbytes = outconsumer.getByteArrayRegion();
+		return parseXcodebuildProcessOutput(outputbytes);
+	}
+
+	public static XcodeSDKVersions parseXcodebuildProcessOutput(ByteArrayRegion outputbytes) throws IOException {
 		NavigableMap<String, ApplePlatformSDKInformation> sdkinfos = new TreeMap<>();
 
 		String xcodeversionnum = null;
 		String xcodebuildversion = null;
-		ByteArrayRegion outputbytes = outconsumer.getByteArrayRegion();
 		try (UnsyncByteArrayInputStream bais = new UnsyncByteArrayInputStream(outputbytes);
 				BufferedReader reader = new BufferedReader(new InputStreamReader(bais, StandardCharsets.UTF_8))) {
 			ApplePlatformSDKInformation sdkinfo = null;
@@ -105,7 +110,12 @@ public class XcodeSDKVersions implements Externalizable {
 					if (parenstart < 0) {
 						throw new IOException("Failed to determine SDK type from line: " + line);
 					}
-					sdkinfo = new ApplePlatformSDKInformation(line.substring(parenstart + 1, line.length() - 1));
+					int parenend = line.indexOf(')', parenstart + 1);
+					if (parenend < 0) {
+						throw new IOException("Failed to determine SDK type from line: " + line);
+					}
+					String name = line.substring(parenstart + 1, parenend);
+					sdkinfo = new ApplePlatformSDKInformation(name);
 					continue;
 				}
 				if (line.startsWith("SDKVersion:")) {
@@ -140,8 +150,8 @@ public class XcodeSDKVersions implements Externalizable {
 		return new XcodeSDKVersions(xcodeversion, ImmutableUtils.makeImmutableNavigableMap(sdkinfos));
 	}
 
-	public NavigableMap<String, ApplePlatformSDKInformation> getSDKInformations() {
-		return sdkInformations;
+	public Collection<? extends ApplePlatformSDKInformation> getSDKInformations() {
+		return sdkInformations.values();
 	}
 
 	public XcodeVersionInformation getXcodeVersionInformation() {

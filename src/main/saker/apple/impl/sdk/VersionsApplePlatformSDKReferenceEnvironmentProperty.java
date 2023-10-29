@@ -4,8 +4,8 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -48,9 +48,8 @@ public class VersionsApplePlatformSDKReferenceEnvironmentProperty
 		if (xcsdkversions == null) {
 			throw new SDKNotFoundException("Xcode installation not found.");
 		}
-		NavigableMap<String, ApplePlatformSDKInformation> sdkinfos = xcsdkversions.getSDKInformations();
-		for (Entry<String, ApplePlatformSDKInformation> entry : sdkinfos.entrySet()) {
-			ApplePlatformSDKInformation sdkinfo = entry.getValue();
+		Collection<? extends ApplePlatformSDKInformation> sdkinfos = xcsdkversions.getSDKInformations();
+		for (ApplePlatformSDKInformation sdkinfo : sdkinfos) {
 			if (!platformSimpleName.equals(sdkinfo.getSimpleName())) {
 				continue;
 			}
@@ -58,9 +57,31 @@ public class VersionsApplePlatformSDKReferenceEnvironmentProperty
 				return new ApplePlatformSDKReference(sdkinfo);
 			}
 		}
-		throw new SDKNotFoundException("Apple platform SDK not found for: " + platformSimpleName + " in "
-				+ StringUtils.toStringJoin(", ", sdkinfos.navigableKeySet()) + " for versions: "
-				+ (versions == null ? "any" : StringUtils.toStringJoin(", ", versions)));
+		StringBuilder sb = new StringBuilder("Apple platform SDK not found for: ");
+		sb.append(platformSimpleName);
+		sb.append(" in [");
+		Iterator<? extends ApplePlatformSDKInformation> it = sdkinfos.iterator();
+		if (it.hasNext()) {
+			while (true) {
+				ApplePlatformSDKInformation sdkinfo = it.next();
+				sb.append(sdkinfo.getName());
+				sb.append(" (");
+				sb.append(sdkinfo.getSDKVersion());
+				if (it.hasNext()) {
+					sb.append("), ");
+				} else {
+					sb.append(')');
+					break;
+				}
+			}
+		}
+		sb.append("] for versions: ");
+		if (versions == null) {
+			sb.append("any");
+		} else {
+			sb.append(StringUtils.toStringJoin(", ", versions));
+		}
+		throw new SDKNotFoundException(sb.toString());
 	}
 
 	@Override

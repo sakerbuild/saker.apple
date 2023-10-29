@@ -6,7 +6,6 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 
 import saker.build.exception.PropertyComputationFailedException;
@@ -59,8 +58,7 @@ public class XcodeSDKVersionsEnvironmentProperty
 
 			LinkedHashMap<Object, Object> platformsdks = new LinkedHashMap<>();
 			xcodeprops.put("Platform SDKs", platformsdks);
-			for (Entry<String, ApplePlatformSDKInformation> entry : propertyvalue.getSDKInformations().entrySet()) {
-				ApplePlatformSDKInformation sdkinfo = entry.getValue();
+			for (ApplePlatformSDKInformation sdkinfo : propertyvalue.getSDKInformations()) {
 				LinkedHashMap<String, String> sdkmap = new LinkedHashMap<>();
 
 				String simplename = sdkinfo.getSimpleName();

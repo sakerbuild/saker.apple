@@ -4,15 +4,15 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.Objects;
 
 import saker.apple.impl.xcode.ApplePlatformSDKInformation;
 import saker.apple.impl.xcode.XcodeSDKVersions;
 import saker.apple.impl.xcode.XcodeSDKVersionsEnvironmentProperty;
 import saker.build.runtime.environment.EnvironmentProperty;
 import saker.build.runtime.environment.SakerEnvironment;
-import saker.build.thirdparty.saker.util.StringUtils;
 import saker.build.thirdparty.saker.util.io.SerialUtils;
 import saker.sdk.support.api.SDKReference;
 import saker.sdk.support.api.exc.SDKNotFoundException;
@@ -40,15 +40,30 @@ public class SpecificApplePlatformSDKReferenceEnvironmentProperty
 		if (xcsdkversions == null) {
 			throw new SDKNotFoundException("Xcode installation not found.");
 		}
-		NavigableMap<String, ApplePlatformSDKInformation> sdkinfos = xcsdkversions.getSDKInformations();
-		for (Entry<String, ApplePlatformSDKInformation> entry : sdkinfos.entrySet()) {
-			ApplePlatformSDKInformation sdkinfo = entry.getValue();
-			if (sdkInformation.equals(sdkinfo)) {
+		Collection<? extends ApplePlatformSDKInformation> sdkinfos = xcsdkversions.getSDKInformations();
+		for (ApplePlatformSDKInformation sdkinfo : sdkinfos) {
+			if (sdkInformation.sdkAttributesEqual(sdkinfo)) {
 				return new ApplePlatformSDKReference(sdkinfo);
 			}
 		}
-		throw new SDKNotFoundException("Apple platform SDK not found for: " + sdkInformation + " in "
-				+ StringUtils.toStringJoin(", ", sdkinfos.navigableKeySet()));
+		StringBuilder sb = new StringBuilder("Apple platform SDK not found for: ");
+		sb.append(sdkInformation);
+		sb.append(" in [");
+		Iterator<? extends ApplePlatformSDKInformation> it = sdkinfos.iterator();
+		if (it.hasNext()) {
+			while (true) {
+				ApplePlatformSDKInformation sdkinfo = it.next();
+				sb.append(sdkinfo);
+				if (it.hasNext()) {
+					sb.append(", ");
+				} else {
+					sb.append(')');
+					break;
+				}
+			}
+		}
+		sb.append(']');
+		throw new SDKNotFoundException(sb.toString());
 	}
 
 	@Override
@@ -61,11 +76,13 @@ public class SpecificApplePlatformSDKReferenceEnvironmentProperty
 		sdkInformation = SerialUtils.readExternalObject(in);
 	}
 
+	//Note: the hashCode and equality only checks the SDK attributes, as other properties (installation path) are irrelevant
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((sdkInformation == null) ? 0 : sdkInformation.hashCode());
+		result = prime * result + ((sdkInformation == null) ? 0 : Objects.hashCode(sdkInformation.getName()));
 		return result;
 	}
 
@@ -81,7 +98,7 @@ public class SpecificApplePlatformSDKReferenceEnvironmentProperty
 		if (sdkInformation == null) {
 			if (other.sdkInformation != null)
 				return false;
-		} else if (!sdkInformation.equals(other.sdkInformation))
+		} else if (!sdkInformation.sdkAttributesEqual(other.sdkInformation))
 			return false;
 		return true;
 	}
