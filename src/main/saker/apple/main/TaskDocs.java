@@ -78,13 +78,15 @@ public class TaskDocs {
 					@NestFieldInformation(value = "watchos", info = @NestInformation("The watchOS platform.")),
 					@NestFieldInformation(value = "watchsimulator",
 							info = @NestInformation("The watchOS simulator platform.")),
+					@NestFieldInformation(value = "driverkit", info = @NestInformation("The DriverKit platform.")),
 
 			})
 	public static class DocApplePlatformOption {
-		public static final Set<String> KNOWN_PLATFORMS = ImmutableUtils.makeImmutableNavigableSet(new String[] {
-				"iphoneos", "iphonesimulator", "macosx", "appletvos", "appletvsimulator", "watchos", "watchsimulator",
-				//macos is also recognized by us, but converted to macosx internally
-				"macos", });
+		public static final Set<String> KNOWN_PLATFORMS = ImmutableUtils
+				.makeImmutableNavigableSet(new String[] { "iphoneos", "iphonesimulator", "macosx", "appletvos",
+						"appletvsimulator", "watchos", "watchsimulator", "driverkit",
+						//macos is also recognized by us, but converted to macosx internally
+						"macos", });
 	}
 
 	@NestInformation("Name of an Apple development target architecture.")
