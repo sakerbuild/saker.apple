@@ -11,6 +11,7 @@ import saker.build.thirdparty.saker.util.io.SerialUtils;
 public class ApplePlatformSDKInformation implements Externalizable {
 	private static final long serialVersionUID = 1L;
 
+	private String headerSDKName;
 	private String name;
 	private String sdkVersion;
 	private SakerPath path;
@@ -28,8 +29,30 @@ public class ApplePlatformSDKInformation implements Externalizable {
 	public ApplePlatformSDKInformation() {
 	}
 
-	public ApplePlatformSDKInformation(String name) {
+	public ApplePlatformSDKInformation(String headerSDKName, String name) {
+		this.headerSDKName = headerSDKName;
 		this.name = name;
+	}
+
+	/**
+	 * Gets the header SDK name.
+	 * <p>
+	 * This name is the first section of the <code>xcodebuild -version -sdk</code> output. E.g. for
+	 * 
+	 * <pre>
+	 * MacOSX13.1.sdk - macOS 13.1 (macosx13.1)
+	 * </pre>
+	 * 
+	 * it is
+	 * 
+	 * <pre>
+	 * MacOSX13.1.sdk
+	 * </pre>
+	 * 
+	 * @return
+	 */
+	public String getHeaderSDKName() {
+		return headerSDKName;
 	}
 
 	public String getName() {
@@ -135,6 +158,7 @@ public class ApplePlatformSDKInformation implements Externalizable {
 
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
+		out.writeObject(headerSDKName);
 		out.writeObject(name);
 		out.writeObject(sdkVersion);
 		out.writeObject(path);
@@ -149,6 +173,7 @@ public class ApplePlatformSDKInformation implements Externalizable {
 
 	@Override
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
+		headerSDKName = SerialUtils.readExternalObject(in);
 		name = SerialUtils.readExternalObject(in);
 		sdkVersion = SerialUtils.readExternalObject(in);
 		path = SerialUtils.readExternalObject(in);
@@ -195,6 +220,11 @@ public class ApplePlatformSDKInformation implements Externalizable {
 	 * paths aren't checked for equality, so the SDK installation paths may differ.
 	 */
 	public boolean sdkAttributesEqual(ApplePlatformSDKInformation other) {
+		if (headerSDKName == null) {
+			if (other.headerSDKName != null)
+				return false;
+		} else if (!headerSDKName.equals(other.headerSDKName))
+			return false;
 		if (name == null) {
 			if (other.name != null)
 				return false;
@@ -242,6 +272,11 @@ public class ApplePlatformSDKInformation implements Externalizable {
 	public String toString() {
 		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
 		builder.append("[");
+		if (headerSDKName != null) {
+			builder.append("headerSDKName=");
+			builder.append(headerSDKName);
+			builder.append(", ");
+		}
 		if (name != null) {
 			builder.append("name=");
 			builder.append(name);

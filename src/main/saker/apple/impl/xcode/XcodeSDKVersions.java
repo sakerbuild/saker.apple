@@ -82,12 +82,14 @@ public class XcodeSDKVersions implements Externalizable {
 			for (String line; (line = reader.readLine()) != null;) {
 				if (line.isEmpty()) {
 					if (sdkinfo != null) {
-						ApplePlatformSDKInformation prev = sdkinfos.putIfAbsent(sdkinfo.getName(), sdkinfo);
+						//use the hader SDK name for the key, as the name might be duplicated in some strange case 
+						String key = sdkinfo.getHeaderSDKName();
+						ApplePlatformSDKInformation prev = sdkinfos.putIfAbsent(key, sdkinfo);
 						if (prev != null) {
 							//make the exception contain all data so we're able to investigate the issue if the error happens
 							//on a system we don't have direct access to
-							throw new IOException("Duplicate SDKs detected with name: " + sdkinfo.getName() + " new: "
-									+ sdkinfo + " prev: " + prev + " in:\n" + outputbytes);
+							throw new IOException("Duplicate SDKs detected with name: " + key + " new: " + sdkinfo
+									+ " prev: " + prev + " in:\n" + outputbytes);
 						}
 						sdkinfo = null;
 					}
@@ -114,8 +116,13 @@ public class XcodeSDKVersions implements Externalizable {
 					if (parenend < 0) {
 						throw new IOException("Failed to determine SDK type from line: " + line);
 					}
+					int dashidx = line.indexOf('-');
+					if (dashidx < 0) {
+						dashidx = parenstart;
+					}
 					String name = line.substring(parenstart + 1, parenend);
-					sdkinfo = new ApplePlatformSDKInformation(name);
+					String headersdkname = line.substring(0, dashidx).trim();
+					sdkinfo = new ApplePlatformSDKInformation(headersdkname, name);
 					continue;
 				}
 				if (line.startsWith("SDKVersion:")) {

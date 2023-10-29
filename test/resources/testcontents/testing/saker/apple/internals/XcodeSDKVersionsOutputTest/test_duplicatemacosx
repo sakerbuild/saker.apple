@@ -1,0 +1,98 @@
+DriverKit22.2.sdk - DriverKit 22.2 (driverkit22.2)
+SDKVersion: 22.2
+Path: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/DriverKit.platform/Developer/SDKs/DriverKit22.2.sdk
+PlatformVersion: 22.2
+PlatformPath: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/DriverKit.platform
+
+iPhoneOS16.2.sdk - iOS 16.2 (iphoneos16.2)
+SDKVersion: 16.2
+Path: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS16.2.sdk
+PlatformVersion: 16.2
+PlatformPath: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/iPhoneOS.platform
+BuildID: 1991300E-6117-11ED-BDD5-EAD6C5FA279F
+ProductBuildVersion: 20C52
+ProductCopyright: 1983-2022 Apple Inc.
+ProductName: iPhone OS
+ProductVersion: 16.2
+
+iPhoneSimulator16.2.sdk - Simulator - iOS 16.2 (iphonesimulator16.2)
+SDKVersion: 16.2
+Path: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator16.2.sdk
+PlatformVersion: 16.2
+PlatformPath: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/iPhoneSimulator.platform
+BuildID: 1991300E-6117-11ED-BDD5-EAD6C5FA279F
+ProductBuildVersion: 20C52
+ProductCopyright: 1983-2022 Apple Inc.
+ProductName: iPhone OS
+ProductVersion: 16.2
+
+MacOSX13.1.sdk - macOS 13.1 (macosx13.1)
+SDKVersion: 13.1
+Path: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.1.sdk
+PlatformVersion: 13.1
+PlatformPath: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/MacOSX.platform
+ProductBuildVersion: 22C55
+ProductCopyright: 1983-2022 Apple Inc.
+ProductName: macOS
+ProductUserVisibleVersion: 13.1
+ProductVersion: 13.1
+iOSSupportVersion: 16.2
+
+MacOSX13.sdk - macOS 13.1 (macosx13.1)
+SDKVersion: 13.1
+Path: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.sdk
+PlatformVersion: 13.1
+PlatformPath: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/MacOSX.platform
+ProductBuildVersion: 22C55
+ProductCopyright: 1983-2022 Apple Inc.
+ProductName: macOS
+ProductUserVisibleVersion: 13.1
+ProductVersion: 13.1
+iOSSupportVersion: 16.2
+
+AppleTVOS16.1.sdk - tvOS 16.1 (appletvos16.1)
+SDKVersion: 16.1
+Path: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS16.1.sdk
+PlatformVersion: 16.1
+PlatformPath: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/AppleTVOS.platform
+BuildID: 6AE058E4-4525-11ED-8FF0-ED3F4229A8B9
+ProductBuildVersion: 20K67
+ProductCopyright: 1983-2022 Apple Inc.
+ProductName: Apple TVOS
+ProductVersion: 16.1
+
+AppleTVSimulator16.1.sdk - Simulator - tvOS 16.1 (appletvsimulator16.1)
+SDKVersion: 16.1
+Path: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/AppleTVSimulator.platform/Developer/SDKs/AppleTVSimulator16.1.sdk
+PlatformVersion: 16.1
+PlatformPath: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/AppleTVSimulator.platform
+BuildID: 6AE058E4-4525-11ED-8FF0-ED3F4229A8B9
+ProductBuildVersion: 20K67
+ProductCopyright: 1983-2022 Apple Inc.
+ProductName: Apple TVOS
+ProductVersion: 16.1
+
+WatchOS9.1.sdk - watchOS 9.1 (watchos9.1)
+SDKVersion: 9.1
+Path: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/WatchOS.platform/Developer/SDKs/WatchOS9.1.sdk
+PlatformVersion: 9.1
+PlatformPath: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/WatchOS.platform
+BuildID: E2524504-452F-11ED-8D37-09A8E86CB565
+ProductBuildVersion: 20S71
+ProductCopyright: 1983-2022 Apple Inc.
+ProductName: Watch OS
+ProductVersion: 9.1
+
+WatchSimulator9.1.sdk - Simulator - watchOS 9.1 (watchsimulator9.1)
+SDKVersion: 9.1
+Path: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator9.1.sdk
+PlatformVersion: 9.1
+PlatformPath: /Applications/Xcode_14.2.app/Contents/Developer/Platforms/WatchSimulator.platform
+BuildID: E2524504-452F-11ED-8D37-09A8E86CB565
+ProductBuildVersion: 20S71
+ProductCopyright: 1983-2022 Apple Inc.
+ProductName: Watch OS
+ProductVersion: 9.1
+
+Xcode 14.2
+Build version 14C18
