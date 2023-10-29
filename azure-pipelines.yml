@@ -5,14 +5,14 @@ pool:
   vmImage: 'macOS-latest'
 
 steps:
+# show the below command output so we can have info about how this looks like on more recent macOS versions on CI
+- script: xcodebuild -version -sdk
+  displayName: 'Show xcodebuild versions'
+  
 - script: curl -L https://api.nest.saker.build/bundle/download/saker.build-v$(curl -s https://mirror.nest.saker.build/badges/saker.build/latest.txt) -o saker.build.jar
   displayName: 'Download saker.build'
 - script: java -jar saker.build.jar -bd build -trace pwd://build/build_export.trace -trace-artifacts-embed export
   displayName: 'Export'
-
-# show the below command output so we can have info about how this looks like on more recent macOS versions on CI
-- script: xcodebuild -version -sdk
-  displayName: 'Show xcodebuild versions'
 
 - task: PublishBuildArtifacts@1
   condition: always()
