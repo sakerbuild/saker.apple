@@ -15,6 +15,7 @@ import saker.build.file.path.SakerPath;
 import saker.build.thirdparty.saker.util.ImmutableUtils;
 import saker.build.thirdparty.saker.util.ObjectUtils;
 import saker.build.thirdparty.saker.util.StringUtils;
+import saker.build.thirdparty.saker.util.io.ByteArrayRegion;
 import saker.build.thirdparty.saker.util.io.SerialUtils;
 import saker.build.thirdparty.saker.util.io.UnsyncByteArrayInputStream;
 import saker.process.api.CollectingProcessIOConsumer;
@@ -69,18 +70,22 @@ public class XcodeSDKVersions implements Externalizable {
 
 		String xcodeversionnum = null;
 		String xcodebuildversion = null;
-		try (UnsyncByteArrayInputStream bais = new UnsyncByteArrayInputStream(outconsumer.getByteArrayRegion());
+		ByteArrayRegion outputbytes = outconsumer.getByteArrayRegion();
+		try (UnsyncByteArrayInputStream bais = new UnsyncByteArrayInputStream(outputbytes);
 				BufferedReader reader = new BufferedReader(new InputStreamReader(bais, StandardCharsets.UTF_8))) {
 			ApplePlatformSDKInformation sdkinfo = null;
 			for (String line; (line = reader.readLine()) != null;) {
 				if (line.isEmpty()) {
 					if (sdkinfo != null) {
-						ApplePlatformSDKInformation prev = sdkinfos.put(sdkinfo.getName(), sdkinfo);
+						ApplePlatformSDKInformation prev = sdkinfos.putIfAbsent(sdkinfo.getName(), sdkinfo);
 						if (prev != null) {
-							throw new IOException("Duplicate SDKs detected with name: " + sdkinfo.getName());
+							//make the exception contain all data so we're able to investigate the issue if the error happens
+							//on a system we don't have direct access to
+							throw new IOException("Duplicate SDKs detected with name: " + sdkinfo.getName() + " new: "
+									+ sdkinfo + " prev: " + prev + " in:\n" + outputbytes);
 						}
+						sdkinfo = null;
 					}
-					sdkinfo = null;
 					continue;
 				}
 				if (sdkinfo == null) {
@@ -125,7 +130,11 @@ public class XcodeSDKVersions implements Externalizable {
 			}
 		}
 		if (ObjectUtils.isNullOrEmpty(xcodeversionnum) || ObjectUtils.isNullOrEmpty(xcodebuildversion)) {
-			throw new IOException("Failed to determine Xcode version. (Properties not found in 'xcodebuild -version -sdk' process output.)");
+			//make the exception contain all data so we're able to investigate the issue if the error happens
+			//on a system we don't have direct access to
+			throw new IOException(
+					"Failed to determine Xcode version. Properties not found in 'xcodebuild -version -sdk' process output:\n"
+							+ outputbytes);
 		}
 		XcodeVersionInformation xcodeversion = new XcodeVersionInformation(xcodeversionnum, xcodebuildversion);
 		return new XcodeSDKVersions(xcodeversion, ImmutableUtils.makeImmutableNavigableMap(sdkinfos));

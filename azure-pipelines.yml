@@ -9,6 +9,11 @@ steps:
   displayName: 'Download saker.build'
 - script: java -jar saker.build.jar -bd build -trace pwd://build/build_export.trace -trace-artifacts-embed export
   displayName: 'Export'
+
+# show the below command output so we can have info about how this looks like on more recent macOS versions on CI
+- script: xcodebuild -version -sdk
+  displayName: 'Show xcodebuild versions'
+
 - task: PublishBuildArtifacts@1
   condition: always()
   displayName: 'Publish export trace'

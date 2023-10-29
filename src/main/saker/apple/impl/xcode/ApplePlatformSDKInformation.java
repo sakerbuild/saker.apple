@@ -230,6 +230,58 @@ public class ApplePlatformSDKInformation implements Externalizable {
 
 	@Override
 	public String toString() {
-		return "XcodeSDKInformation[" + (name != null ? "name=" + name : "") + "]";
+		StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+		builder.append("[");
+		if (name != null) {
+			builder.append("name=");
+			builder.append(name);
+			builder.append(", ");
+		}
+		if (sdkVersion != null) {
+			builder.append("sdkVersion=");
+			builder.append(sdkVersion);
+			builder.append(", ");
+		}
+		if (path != null) {
+			builder.append("path=");
+			builder.append(path);
+			builder.append(", ");
+		}
+		if (platformVersion != null) {
+			builder.append("platformVersion=");
+			builder.append(platformVersion);
+			builder.append(", ");
+		}
+		if (platformPath != null) {
+			builder.append("platformPath=");
+			builder.append(platformPath);
+			builder.append(", ");
+		}
+		if (productBuildVersion != null) {
+			builder.append("productBuildVersion=");
+			builder.append(productBuildVersion);
+			builder.append(", ");
+		}
+		if (productCopyright != null) {
+			builder.append("productCopyright=");
+			builder.append(productCopyright);
+			builder.append(", ");
+		}
+		if (productName != null) {
+			builder.append("productName=");
+			builder.append(productName);
+			builder.append(", ");
+		}
+		if (productUserVisibleVersion != null) {
+			builder.append("productUserVisibleVersion=");
+			builder.append(productUserVisibleVersion);
+			builder.append(", ");
+		}
+		if (productVersion != null) {
+			builder.append("productVersion=");
+			builder.append(productVersion);
+		}
+		builder.append("]");
+		return builder.toString();
 	}
 }
