@@ -31,6 +31,7 @@ public class XcodeSDKVersionsEnvironmentProperty
 		TRACE_SDK_SIMPLE_NAME_REPLACEMENTS.put("appletvsimulator", "tvOS Simulator");
 		TRACE_SDK_SIMPLE_NAME_REPLACEMENTS.put("watchos", "watchOS");
 		TRACE_SDK_SIMPLE_NAME_REPLACEMENTS.put("watchsimulator", "watchOS Simulator");
+		TRACE_SDK_SIMPLE_NAME_REPLACEMENTS.put("driverkit", "DriverKit");
 	}
 
 	public static final XcodeSDKVersionsEnvironmentProperty INSTANCE = new XcodeSDKVersionsEnvironmentProperty();
@@ -61,9 +62,7 @@ public class XcodeSDKVersionsEnvironmentProperty
 			for (ApplePlatformSDKInformation sdkinfo : propertyvalue.getSDKInformations()) {
 				LinkedHashMap<String, String> sdkmap = new LinkedHashMap<>();
 
-				String simplename = sdkinfo.getSimpleName();
-				platformsdks.put(TRACE_SDK_SIMPLE_NAME_REPLACEMENTS.getOrDefault(simplename, simplename) + " "
-						+ sdkinfo.getSDKVersion(), sdkmap);
+				platformsdks.put(getSDKTraceDisplayName(sdkinfo), sdkmap);
 				SakerPath path = sdkinfo.getPath();
 				String platformver = sdkinfo.getPlatformVersion();
 				SakerPath platformpath = sdkinfo.getPlatformPath();
@@ -94,6 +93,25 @@ public class XcodeSDKVersionsEnvironmentProperty
 						BuildTrace.VALUE_CATEGORY_ENVIRONMENT);
 			}
 		}
+	}
+
+	private static String getSDKTraceDisplayName(ApplePlatformSDKInformation sdkinfo) {
+		String simplename = sdkinfo.getSimpleName();
+		StringBuilder displaynamesb = new StringBuilder();
+		displaynamesb.append(TRACE_SDK_SIMPLE_NAME_REPLACEMENTS.getOrDefault(simplename, simplename));
+		displaynamesb.append(" ");
+		displaynamesb.append(sdkinfo.getSDKVersion());
+
+		String headersdkname = sdkinfo.getHeaderSDKName();
+		if (headersdkname != null && !(sdkinfo.getName() + ".sdk").equalsIgnoreCase(headersdkname)) {
+			//The header SDK name and the name is different for some reason, e.g. in
+			//    MacOSX13.sdk - macOS 13.1 (macosx13.1)
+			//append the header sdk name to the display name to avoid confusion
+			displaynamesb.append(" (");
+			displaynamesb.append(headersdkname);
+			displaynamesb.append(')');
+		}
+		return displaynamesb.toString();
 	}
 
 	@Override
